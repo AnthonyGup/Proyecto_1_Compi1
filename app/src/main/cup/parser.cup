@@ -1,0 +1,512 @@
+import java_cup.runtime.Symbol;
+
+parser code {:
+:};
+
+action code {:
+:};
+
+/* =================================================
+TERMINALES
+================================================= */
+
+terminal SECTION, TABLE, TEXT;
+terminal OPEN_QUESTION, DROP_QUESTION, SELECT_QUESTION, MULTIPLE_QUESTION;
+terminal IF, ELSE, WHILE, DO, FOR, IN;
+
+terminal WIDTH, HEIGHT, LABEL, ORIENTATION, ELEMENTS, POINTX, POINTY, CONTENT;
+terminal COLOR, BACKGROUND_COLOR, FONT_FAMILY, TEXT_SIZE, BORDER;
+
+terminal OPTIONS, CORRECT, STYLES;
+
+terminal NUMBER, STRING, SPECIAL;
+
+terminal VERTICAL, HORIZONTAL;
+
+terminal MONO, SANS_SERIF, CURSIVE;
+
+terminal LINE, DOTTED, DOUBLE;
+
+terminal RED, BLUE, GREEN, PURPLE, SKY, YELLOW, BLACK, WHITE;
+
+terminal WHO_IS_THAT_POKEMON, DRAW;
+
+terminal MAS, MENOS, POR, DIV, POTENCIA, MODULO;
+terminal UMINUS;
+
+terminal PAREN_IZQ, PAREN_DER;
+
+terminal IGUAL, DIFERENTE, MAYOR, MENOR, MAYOR_IGUAL, MENOR_IGUAL;
+
+terminal AND, OR, NOT;
+
+terminal ASIGNACION;
+
+terminal LLAVE_IZQ, LLAVE_DER, COR_IZQ, COR_DER;
+
+terminal DOS_PUNTOS, COMA, PUNTO, RANGO, PUNTOYCOMA;
+
+terminal WILDCARD;
+
+terminal ENTERO, DECIMAL, CADENA, ID, EMOJI;
+
+terminal HEX_COLOR, RGB_COLOR, HSL_COLOR;
+
+terminal COMMENT, MULTILINE_COMMENT;
+
+terminal ERROR;
+
+
+/* =================================================
+NO TERMINALES
+================================================= */
+
+non terminal programa;
+non terminal lista_instrucciones;
+non terminal instruccion;
+
+non terminal declaracion_variable;
+non terminal asignacion;
+non terminal asignacion_numerica;
+non terminal llamada_draw;
+
+non terminal seccion;
+non terminal tabla;
+non terminal texto;
+non terminal pregunta;
+
+non terminal lista_argumentos;
+
+non terminal lista_elementos;
+non terminal elemento;
+
+non terminal filas;
+non terminal fila;
+non terminal lista_celdas;
+non terminal celda;
+
+non terminal lista_opciones_min2;
+non terminal lista_numeros;
+non terminal argumento_pokemon;
+
+non terminal atributos_section;
+non terminal atributos_tabla;
+non terminal atributos_texto;
+non terminal atributos_open_pregunta;
+non terminal atributos_drop_pregunta;
+non terminal atributos_select_pregunta;
+non terminal atributos_multiple_pregunta;
+
+non terminal atributo_section;
+non terminal atributo_tabla;
+non terminal atributo_texto;
+non terminal atributo_open_pregunta;
+non terminal atributo_drop_pregunta;
+non terminal atributo_select_pregunta;
+non terminal atributo_multiple_pregunta;
+
+non terminal orientacion;
+
+non terminal lista_estilos;
+non terminal estilo;
+non terminal bordes;
+non terminal fuentes;
+non terminal colores;
+
+non terminal bloque_if;
+non terminal bloque_else;
+non terminal bloque_while;
+non terminal bloque_do;
+non terminal bloque_for;
+
+non terminal expresion;
+non terminal expresion_logica;
+non terminal expresion_logica_or;
+non terminal expresion_logica_and;
+non terminal expresion_comparacion;
+non terminal expresion_aritmetica;
+non terminal valor;
+
+non terminal cadena_con_emojis;
+
+
+/* =================================================
+PRECEDENCIA
+================================================= */
+
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+
+precedence left IGUAL, DIFERENTE, MAYOR, MENOR, MAYOR_IGUAL, MENOR_IGUAL;
+
+precedence left MAS, MENOS;
+precedence left POR, DIV;
+precedence left POTENCIA, MODULO;
+
+precedence right UMINUS;
+
+
+/* =================================================
+INICIO
+================================================= */
+
+start with programa;
+
+programa ::= lista_instrucciones ;
+
+
+/* =================================================
+INSTRUCCIONES
+================================================= */
+
+lista_instrucciones ::= lista_instrucciones instruccion
+                      | instruccion
+;
+
+instruccion ::=
+      declaracion_variable
+    | asignacion
+    | llamada_draw
+    | seccion
+    | tabla
+    | bloque_if
+    | bloque_while
+    | bloque_do
+    | bloque_for
+    | COMMENT
+    | MULTILINE_COMMENT
+    | ERROR
+;
+
+
+/* =================================================
+VARIABLES
+================================================= */
+
+declaracion_variable ::=
+      NUMBER ID
+    | STRING ID
+    | NUMBER ID ASIGNACION expresion_aritmetica
+    | STRING ID ASIGNACION cadena_con_emojis
+    | SPECIAL ID ASIGNACION pregunta
+;
+
+asignacion ::= ID ASIGNACION expresion_aritmetica ;
+
+asignacion ::= ID ASIGNACION cadena_con_emojis ;
+
+asignacion ::= ID ASIGNACION pregunta ;
+
+asignacion_numerica ::= ID ASIGNACION expresion_aritmetica ;
+
+
+/* =================================================
+DRAW
+================================================= */
+
+llamada_draw ::= ID PUNTO DRAW PAREN_IZQ lista_argumentos PAREN_DER ;
+
+lista_argumentos ::= lista_argumentos COMA valor
+                   | valor
+                   |
+;
+
+
+/* =================================================
+SECTION
+================================================= */
+
+seccion ::= SECTION COR_IZQ atributos_section COR_DER ;
+
+atributos_section ::= atributos_section COMA atributo_section
+                    | atributo_section
+;
+
+atributo_section ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+    | POINTX DOS_PUNTOS expresion
+    | POINTY DOS_PUNTOS expresion
+    | ORIENTATION DOS_PUNTOS orientacion
+    | ELEMENTS DOS_PUNTOS LLAVE_IZQ lista_elementos LLAVE_DER
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+
+/* =================================================
+TABLE
+================================================= */
+
+tabla ::= TABLE COR_IZQ atributos_tabla COR_DER ;
+
+atributos_tabla ::= atributos_tabla COMA atributo_tabla
+                  | atributo_tabla
+;
+
+atributo_tabla ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+    | POINTX DOS_PUNTOS expresion
+    | POINTY DOS_PUNTOS expresion
+    | ELEMENTS DOS_PUNTOS LLAVE_IZQ filas LLAVE_DER
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+
+/* =================================================
+TEXT
+================================================= */
+
+texto ::= TEXT COR_IZQ atributos_texto COR_DER ;
+
+atributos_texto ::= atributos_texto COMA atributo_texto
+                  | atributo_texto
+;
+
+atributo_texto ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+    | POINTX DOS_PUNTOS expresion
+    | POINTY DOS_PUNTOS expresion
+    | CONTENT DOS_PUNTOS cadena_con_emojis
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+
+/* =================================================
+PREGUNTAS
+================================================= */
+
+pregunta ::=
+      OPEN_QUESTION COR_IZQ atributos_open_pregunta COR_DER
+    | DROP_QUESTION COR_IZQ atributos_drop_pregunta COR_DER
+    | SELECT_QUESTION COR_IZQ atributos_select_pregunta COR_DER
+    | MULTIPLE_QUESTION COR_IZQ atributos_multiple_pregunta COR_DER
+;
+
+atributos_open_pregunta ::= atributos_open_pregunta COMA atributo_open_pregunta
+                          | atributo_open_pregunta
+;
+
+atributo_open_pregunta ::= 
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+    | LABEL DOS_PUNTOS cadena_con_emojis
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+atributos_drop_pregunta ::= atributos_drop_pregunta COMA atributo_drop_pregunta
+                          | atributo_drop_pregunta
+;
+
+atributo_drop_pregunta ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+    | LABEL DOS_PUNTOS cadena_con_emojis
+  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
+    | OPTIONS DOS_PUNTOS WHO_IS_THAT_POKEMON PAREN_IZQ argumento_pokemon COMA ENTERO COMA ENTERO PAREN_DER
+  | CORRECT DOS_PUNTOS expresion_aritmetica
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+atributos_select_pregunta ::= atributos_select_pregunta COMA atributo_select_pregunta
+                            | atributo_select_pregunta
+;
+
+atributo_select_pregunta ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
+  | CORRECT DOS_PUNTOS expresion_aritmetica
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+atributos_multiple_pregunta ::= atributos_multiple_pregunta COMA atributo_multiple_pregunta
+                              | atributo_multiple_pregunta
+;
+
+atributo_multiple_pregunta ::=
+      WIDTH DOS_PUNTOS expresion
+    | HEIGHT DOS_PUNTOS expresion
+  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
+    | CORRECT DOS_PUNTOS LLAVE_IZQ lista_numeros LLAVE_DER
+    | STYLES COR_IZQ lista_estilos COR_DER
+;
+
+orientacion ::= VERTICAL | HORIZONTAL ;
+
+
+/* =================================================
+ESTILOS
+================================================= */
+
+lista_estilos ::= lista_estilos COMA estilo
+                | estilo
+;
+
+estilo ::=
+      COLOR DOS_PUNTOS colores
+    | BACKGROUND_COLOR DOS_PUNTOS colores
+    | FONT_FAMILY DOS_PUNTOS fuentes
+    | TEXT_SIZE DOS_PUNTOS expresion
+  | BORDER DOS_PUNTOS PAREN_IZQ expresion COMA bordes COMA colores PAREN_DER
+;
+
+colores ::=
+      RED | BLUE | GREEN | PURPLE | SKY | YELLOW | BLACK | WHITE
+    | RGB_COLOR | HEX_COLOR | HSL_COLOR
+;
+
+fuentes ::= MONO | SANS_SERIF | CURSIVE ;
+
+bordes ::= LINE | DOTTED | DOUBLE ;
+
+
+/* =================================================
+ELEMENTOS
+================================================= */
+
+lista_elementos ::= lista_elementos COMA elemento
+                  | elemento
+;
+
+elemento ::= seccion
+           | tabla
+           | texto
+           | pregunta
+;
+
+
+/* =================================================
+TABLAS
+================================================= */
+
+filas ::= filas COMA fila
+        | fila
+;
+
+fila ::= COR_IZQ lista_celdas COR_DER ;
+
+lista_celdas ::= lista_celdas COMA celda
+               | celda
+;
+
+celda ::= LLAVE_IZQ elemento LLAVE_DER ;
+
+
+/* =================================================
+OPCIONES
+================================================= */
+
+lista_opciones_min2 ::= cadena_con_emojis COMA cadena_con_emojis
+                     | lista_opciones_min2 COMA cadena_con_emojis
+;
+
+argumento_pokemon ::= NUMBER
+                    | expresion_aritmetica
+;
+
+lista_numeros ::= lista_numeros COMA ENTERO
+                | ENTERO
+;
+
+
+/* =================================================
+CONTROL
+================================================= */
+
+bloque_if ::= IF PAREN_IZQ expresion_logica PAREN_DER
+              LLAVE_IZQ lista_instrucciones LLAVE_DER
+              bloque_else
+;
+
+bloque_else ::= ELSE IF PAREN_IZQ expresion_logica PAREN_DER
+                LLAVE_IZQ lista_instrucciones LLAVE_DER
+                bloque_else
+              | ELSE LLAVE_IZQ lista_instrucciones LLAVE_DER
+              |
+;
+
+bloque_while ::= WHILE PAREN_IZQ expresion_logica PAREN_DER
+                 LLAVE_IZQ lista_instrucciones LLAVE_DER
+;
+
+bloque_do ::= DO LLAVE_IZQ lista_instrucciones LLAVE_DER
+              WHILE PAREN_IZQ expresion_logica PAREN_DER
+;
+
+bloque_for ::=
+  FOR PAREN_IZQ asignacion_numerica PUNTOYCOMA expresion_logica PUNTOYCOMA asignacion_numerica PAREN_DER
+      LLAVE_IZQ lista_instrucciones LLAVE_DER
+    | FOR PAREN_IZQ ID IN expresion RANGO expresion PAREN_DER
+      LLAVE_IZQ lista_instrucciones LLAVE_DER
+;
+
+
+/* =================================================
+EXPRESIONES
+================================================= */
+
+expresion ::= expresion_logica ;
+
+expresion_logica ::=
+      expresion_logica_or
+    | expresion_logica_and
+    | NOT expresion_logica
+    | expresion_comparacion
+;
+
+expresion_logica_or ::=
+      expresion_logica_or OR expresion_comparacion
+    | expresion_comparacion OR expresion_comparacion
+;
+
+expresion_logica_and ::=
+      expresion_logica_and AND expresion_comparacion
+    | expresion_comparacion AND expresion_comparacion
+;
+
+expresion_comparacion ::=
+      expresion_aritmetica MAYOR expresion_aritmetica
+    | expresion_aritmetica MENOR expresion_aritmetica
+    | expresion_aritmetica MAYOR_IGUAL expresion_aritmetica
+    | expresion_aritmetica MENOR_IGUAL expresion_aritmetica
+    | expresion_aritmetica IGUAL expresion_aritmetica
+    | expresion_aritmetica DIFERENTE expresion_aritmetica
+    | expresion_aritmetica
+;
+
+expresion_aritmetica ::=
+      expresion_aritmetica MAS expresion_aritmetica
+    | expresion_aritmetica MENOS expresion_aritmetica
+    | expresion_aritmetica POR expresion_aritmetica
+    | expresion_aritmetica DIV expresion_aritmetica
+    | expresion_aritmetica POTENCIA expresion_aritmetica
+    | expresion_aritmetica MODULO expresion_aritmetica
+    | MENOS expresion_aritmetica %prec UMINUS
+    | PAREN_IZQ expresion_aritmetica PAREN_DER
+    | valor
+;
+
+
+/* =================================================
+VALORES
+================================================= */
+
+valor ::=
+      ENTERO
+    | DECIMAL
+    | ID
+  | WILDCARD
+;
+
+
+/* =================================================
+CADENA CON EMOJIS
+================================================= */
+
+cadena_con_emojis ::= CADENA
+                    | cadena_con_emojis EMOJI
+                    | EMOJI
+;
