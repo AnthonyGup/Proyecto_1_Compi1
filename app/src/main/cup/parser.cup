@@ -1,9 +1,162 @@
+package com.cunoc.compiforms;
+
+import com.cunoc.compiforms.Lexer;
+import com.cunoc.compiforms.sym;
+import com.cunoc.compiforms.data.*;
+import com.cunoc.compiforms.form.model.*;
+import com.cunoc.compiforms.form.model.elements.*;
+import com.cunoc.compiforms.form.model.questions.*;
+import com.cunoc.compiforms.form.model.styles.*;
+import com.cunoc.compiforms.tokens.*;
 import java_cup.runtime.Symbol;
+import java.util.*;
+import com.cunoc.compiforms.semantic.ParserSemanticSupport;
 
 parser code {:
+
+Lexer lexer;
+private List<String> syntaxErrors;
+
+// conexion de parser y lexer
+public Parser(Lexer lex) {
+    super(lex);
+    this.lexer = lex;
+    syntaxErrors = new ArrayList<>();
+}
+
+public Lexer getLexer() {
+    return this.lexer;
+}
+
+public List<String> getSyntaxErrors() {
+    return this.syntaxErrors;
+}
+
+public ParseResult getParseResult() {
+  return ((CUP$Parser$actions) action_obj).getParseResult();
+}
+
+public Map<String, Variable<?>> getVariables() {
+  return ((CUP$Parser$actions) action_obj).getVariables();
+}
+
+public FormDocument getParsedDocument() {
+  return ((CUP$Parser$actions) action_obj).getParsedDocument();
+}
+
+public List<String> getSemanticErrors() {
+  return ((CUP$Parser$actions) action_obj).getSemanticErrors();
+}
+
+public List<String> getWarnings() {
+  return ((CUP$Parser$actions) action_obj).getWarnings();
+}
+
+private String nombreSimboloDesdeId(int tokenId) {
+  if (tokenId >= 0 && tokenId < sym.terminalNames.length) {
+    return sym.terminalNames[tokenId];
+  }
+  return "TOKEN_DESCONOCIDO(" + tokenId + ")";
+}
+
+private void customHandleError(Symbol cur_token) {
+    StringBuilder mssBuilder = new StringBuilder();
+    mssBuilder.append(nombreSimboloDesdeId(cur_token.sym));
+    mssBuilder.append(", line: ").append(cur_token.left);
+    mssBuilder.append(", col: ").append(cur_token.right);
+
+    if(expected_token_ids().isEmpty() ) {
+        mssBuilder.append(" -- ya no se esperaba ningun simbolo");
+    } else {
+        mssBuilder.append(" se esperaba: ");
+        for(Integer expected_token_id : expected_token_ids() ) {
+            mssBuilder.append(nombreSimboloDesdeId(expected_token_id)).append(" ");
+        }
+    }
+    syntaxErrors.add(mssBuilder.toString());
+}
+
+public void syntax_error(Symbol cur_token) {
+    customHandleError(cur_token);
+}
+
+public void report_error(String message, Object info) {
+    try {
+        Symbol cur_token = (Symbol) info;
+        customHandleError(cur_token);
+    } catch (Exception e) {
+        syntaxErrors.add(message);
+    }
+}
+
+public void unrecovered_syntax_error(Symbol cur_token) {
+    syntaxErrors.add("Error fatal: no se puede recuperar del error de sintaxis");
+}
+
 :};
 
 action code {:
+  private ParserSemanticSupport semanticSupport;
+
+  private ParserSemanticSupport semanticSupport() {
+    if (semanticSupport == null) {
+      semanticSupport = new ParserSemanticSupport(parser);
+    }
+    return semanticSupport;
+  }
+
+  public Map<String, Variable<?>> getVariables() { return semanticSupport().getVariables(); }
+  public FormDocument getParsedDocument() { return semanticSupport().getParsedDocument(); }
+  public List<String> getSemanticErrors() { return semanticSupport().getSemanticErrors(); }
+  public List<String> getWarnings() { return semanticSupport().getWarnings(); }
+  public ParseResult getParseResult() { return semanticSupport().getParseResult(); }
+
+  private FormDocument registrarDocumento(FormDocument documento) { semanticSupport().setParsedDocument(documento); return documento; }
+
+  // Delegación a través del "experto en Valores"
+  private HashMap<String, Object> crearAtributo(String n, Object v) { return semanticSupport().getValores().crearAtributo(n, v); }
+  private HashMap<String, Object> combinarAtributos(Object i, Object d) { return semanticSupport().getValores().combinarAtributos(i, d); }
+  private Double convertirADouble(Object v) { return semanticSupport().getValores().convertirADouble(v); }
+  private Integer convertirAEntero(Object v) { return semanticSupport().getValores().convertirAEntero(v); }
+  private String convertirATexto(Object v) { return semanticSupport().getValores().convertirATexto(v); }
+  private String normalizarLiteralCadena(Object v) { return semanticSupport().getValores().normalizarLiteralCadena(v); }
+  private Orientacion convertirAOrientacion(Object v) { return semanticSupport().getValores().convertirAOrientacion(v); }
+  private FontFamily convertirAFuente(Object v) { return semanticSupport().getValores().convertirAFuente(v); }
+  private BorderType convertirATipoBorde(Object v) { return semanticSupport().getValores().convertirATipoBorde(v); }
+  private ColorValue crearColorNombrado(Object v) { return semanticSupport().getValores().crearColorNombrado(v); }
+  private ColorValue crearColorDesdeTexto(Object v) { return semanticSupport().getValores().crearColorDesdeTexto(v); }
+  private BorderStyle crearEstiloBorde(Object s, Object t, Object c) { return semanticSupport().getValores().crearEstiloBorde(s, t, c); }
+  private StyleSet construirEstilos(Object v) { return semanticSupport().getValores().construirEstilos(v); }
+  private ArrayList<FormElement> extraerElementosFormulario(Object v) { return semanticSupport().getValores().extraerElementosFormulario(v); }
+  private ArrayList<TableRow> extraerFilasTabla(Object v) { return semanticSupport().getValores().extraerFilasTabla(v); }
+  private ArrayList<String> extraerListaTextos(Object v) { return semanticSupport().getValores().extraerListaTextos(v); }
+  private ArrayList<Integer> extraerListaEnteros(Object v) { return semanticSupport().getValores().extraerListaEnteros(v); }
+  private ArrayList<Object> extraerListaObjetos(Object v) { return semanticSupport().getValores().extraerListaObjetos(v); }
+  private void validarAtributosObligatorios(Map<String, Object> m, String n, String[] r) { semanticSupport().getValores().validarAtributosObligatorios(m, n, r); }
+
+  // Delegación a través del "experto en Variables"
+  private void declararVariable(String n, VariableType t, Object v) { semanticSupport().getVariablesSoporte().declararVariable(n, t, v); }
+  private void asignarVariable(String n, VariableType t, Object v) { semanticSupport().getVariablesSoporte().asignarVariable(n, t, v); }
+  private void prepararVariableFor(String n) { semanticSupport().getVariablesSoporte().prepararVariableFor(n); }
+  private Object resolverValorVariable(String n) { return semanticSupport().getVariablesSoporte().resolverValorVariable(n); }
+
+  // Delegación a través del "experto en Expresiones"
+  private Object evaluarOperacionAritmetica(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarOperacionAritmetica(i, d, o); }
+  private Object evaluarComparacion(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarComparacion(i, d, o); }
+  private Object evaluarOperacionLogica(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarOperacionLogica(i, d, o); }
+  private Object negarOperacionLogica(Object v) { return semanticSupport().getExpresiones().negarOperacionLogica(v); }
+
+  // Delegación a través del "experto en Preguntas"
+  private Object crearPreguntaConComodines(QuestionElement q, Object m) { return semanticSupport().getPreguntas().crearPreguntaConComodines(q, m); }
+  private void validarDraw(String n, Object a) { semanticSupport().getPreguntas().validarDraw(n, a); }
+  private void validarIndiceCorrecto(String n, Integer i, int t) { semanticSupport().getPreguntas().validarIndiceCorrecto(n, i, t); }
+  private void validarIndicesCorrectos(String n, List<Integer> i, int t) { semanticSupport().getPreguntas().validarIndicesCorrectos(n, i, t); }
+  private void validarCantidadOpcionesSelect(List<String> o) { semanticSupport().getPreguntas().validarCantidadOpcionesSelect(o); }
+
+  // Utilidades generales del Soporte
+  private Object crearResultadoValor(Object v) { return semanticSupport().crearResultadoValor(v); }
+  private Object crearResultadoConComodin() { return semanticSupport().crearResultadoConComodin(); }
+  private QuestionElement extraerPreguntaElemento(Object v) { return semanticSupport().extraerPreguntaElemento(v); }
 :};
 
 /* =================================================
@@ -13,47 +166,26 @@ TERMINALES
 terminal SECTION, TABLE, TEXT;
 terminal OPEN_QUESTION, DROP_QUESTION, SELECT_QUESTION, MULTIPLE_QUESTION;
 terminal IF, ELSE, WHILE, DO, FOR, IN;
-
 terminal WIDTH, HEIGHT, LABEL, ORIENTATION, ELEMENTS, POINTX, POINTY, CONTENT;
 terminal COLOR, BACKGROUND_COLOR, FONT_FAMILY, TEXT_SIZE, BORDER;
-
 terminal OPTIONS, CORRECT, STYLES;
-
 terminal NUMBER, STRING, SPECIAL;
-
 terminal VERTICAL, HORIZONTAL;
-
 terminal MONO, SANS_SERIF, CURSIVE;
-
 terminal LINE, DOTTED, DOUBLE;
-
 terminal RED, BLUE, GREEN, PURPLE, SKY, YELLOW, BLACK, WHITE;
-
 terminal WHO_IS_THAT_POKEMON, DRAW;
-
 terminal MAS, MENOS, POR, DIV, POTENCIA, MODULO;
 terminal UMINUS;
-
 terminal PAREN_IZQ, PAREN_DER;
-
 terminal IGUAL, DIFERENTE, MAYOR, MENOR, MAYOR_IGUAL, MENOR_IGUAL;
-
 terminal AND, OR, NOT;
-
 terminal ASIGNACION;
-
 terminal LLAVE_IZQ, LLAVE_DER, COR_IZQ, COR_DER;
-
 terminal DOS_PUNTOS, COMA, PUNTO, RANGO, PUNTOYCOMA;
-
 terminal WILDCARD;
-
 terminal ENTERO, DECIMAL, CADENA, ID, EMOJI;
-
 terminal HEX_COLOR, RGB_COLOR, HSL_COLOR;
-
-terminal COMMENT, MULTILINE_COMMENT;
-
 terminal ERROR;
 
 
@@ -65,7 +197,7 @@ non terminal programa;
 non terminal lista_instrucciones;
 non terminal instruccion;
 
-non terminal declaracion_variable;
+non terminal declarar_variable;
 non terminal asignacion;
 non terminal asignacion_numerica;
 non terminal llamada_draw;
@@ -105,7 +237,7 @@ non terminal atributo_drop_pregunta;
 non terminal atributo_select_pregunta;
 non terminal atributo_multiple_pregunta;
 
-non terminal orientacion;
+non terminal no_terminal_orientacion;
 
 non terminal lista_estilos;
 non terminal estilo;
@@ -153,30 +285,53 @@ INICIO
 
 start with programa;
 
-programa ::= lista_instrucciones ;
+programa ::= lista_instrucciones:listaInstruccionesReducida
+{: 
+  ArrayList<FormElement> elementosRaiz = extraerElementosFormulario(listaInstruccionesReducida);
+  RESULT = registrarDocumento(new FormDocument(elementosRaiz));
+:}
+;
 
 
 /* =================================================
 INSTRUCCIONES
 ================================================= */
 
-lista_instrucciones ::= lista_instrucciones instruccion
-                      | instruccion
+lista_instrucciones ::= lista_instrucciones:listaAcumulada instruccion:instruccionReducida
+                      {:
+                        ArrayList<FormElement> elementosAcumulados = extraerElementosFormulario(listaAcumulada);
+                        if (instruccionReducida instanceof FormElement) elementosAcumulados.add((FormElement) instruccionReducida);
+                        RESULT = elementosAcumulados;
+                      :}
+                      | instruccion:instruccionReducida
+                      {:
+                        ArrayList<FormElement> elementosIniciales = new ArrayList<>();
+                        if (instruccionReducida instanceof FormElement) elementosIniciales.add((FormElement) instruccionReducida);
+                        RESULT = elementosIniciales;
+                      :}
 ;
 
 instruccion ::=
-      declaracion_variable
+      declarar_variable
+  {: RESULT = null; :}
     | asignacion
+  {: RESULT = null; :}
     | llamada_draw
-    | seccion
-    | tabla
+  {: RESULT = null; :}
+    | seccion:s
+      {: RESULT = s; :}
+    | tabla:t
+      {: RESULT = t; :}
     | bloque_if
+  {: RESULT = null; :}
     | bloque_while
+  {: RESULT = null; :}
     | bloque_do
+  {: RESULT = null; :}
     | bloque_for
-    | COMMENT
-    | MULTILINE_COMMENT
+  {: RESULT = null; :}
     | ERROR
+  {: RESULT = null; :}
 ;
 
 
@@ -184,32 +339,81 @@ instruccion ::=
 VARIABLES
 ================================================= */
 
-declaracion_variable ::=
-      NUMBER ID
-    | STRING ID
-    | NUMBER ID ASIGNACION expresion_aritmetica
-    | STRING ID ASIGNACION cadena_con_emojis
-    | SPECIAL ID ASIGNACION pregunta
+declarar_variable ::=
+      NUMBER ID:id
+      {:
+        declararVariable(id.toString(), VariableType.NUMBER, 0.0);
+      :}
+    | STRING ID:id
+    {:
+      declararVariable(id.toString(), VariableType.STRING, "");
+    :}
+    | NUMBER ID:id ASIGNACION expresion_aritmetica:valorInicial
+      {:
+        declararVariable(id.toString(), VariableType.NUMBER, valorInicial);
+      :}
+    | STRING ID:id ASIGNACION cadena_con_emojis:valorInicial
+      {:
+        declararVariable(id.toString(), VariableType.STRING, valorInicial);
+      :}
+    | SPECIAL ID:id ASIGNACION pregunta:preguntaEspecial
+      {:
+        declararVariable(id.toString(), VariableType.SPECIAL, preguntaEspecial);
+      :}
 ;
 
-asignacion ::= ID ASIGNACION expresion_aritmetica ;
+asignacion ::= ID:id ASIGNACION expresion_aritmetica:valorAsignado
+{:
+  asignarVariable(id.toString(), VariableType.NUMBER, valorAsignado);
+:}
+;
 
-asignacion ::= ID ASIGNACION cadena_con_emojis ;
+asignacion ::= ID:id ASIGNACION cadena_con_emojis:valorAsignado
+{:
+  asignarVariable(id.toString(), VariableType.STRING, valorAsignado);
+:}
+;
 
-asignacion ::= ID ASIGNACION pregunta ;
+asignacion ::= ID:id ASIGNACION pregunta:preguntaEspecial
+{:
+  asignarVariable(id.toString(), VariableType.SPECIAL, preguntaEspecial);
+:}
+;
 
-asignacion_numerica ::= ID ASIGNACION expresion_aritmetica ;
+asignacion_numerica ::= ID:id ASIGNACION expresion_aritmetica:valorAsignado
+{:
+  prepararVariableFor(id.toString());
+  asignarVariable(id.toString(), VariableType.NUMBER, valorAsignado);
+:}
+;
 
 
 /* =================================================
 DRAW
 ================================================= */
 
-llamada_draw ::= ID PUNTO DRAW PAREN_IZQ lista_argumentos PAREN_DER ;
+llamada_draw ::= ID:id PUNTO DRAW PAREN_IZQ lista_argumentos:argumentosDraw PAREN_DER
+{:
+  validarDraw(id.toString(), argumentosDraw);
+:}
+;
 
-lista_argumentos ::= lista_argumentos COMA valor
-                   | valor
+lista_argumentos ::= lista_argumentos:argumentosAcumulados COMA valor:valorReducido
+                   {:
+                     ArrayList<Object> listaArgumentos = extraerListaObjetos(argumentosAcumulados);
+                     listaArgumentos.add(valorReducido);
+                     RESULT = listaArgumentos;
+                   :}
+                   | valor:valorReducido
+                   {:
+                     ArrayList<Object> listaArgumentos = new ArrayList<>();
+                     listaArgumentos.add(valorReducido);
+                     RESULT = listaArgumentos;
+                   :}
                    |
+                   {:
+                     RESULT = new ArrayList<Object>();
+                   :}
 ;
 
 
@@ -217,20 +421,44 @@ lista_argumentos ::= lista_argumentos COMA valor
 SECTION
 ================================================= */
 
-seccion ::= SECTION COR_IZQ atributos_section COR_DER ;
+seccion ::= SECTION COR_IZQ atributos_section:atributosSeccion COR_DER
+{:
+  HashMap<String, Object> mapaAtributosSeccion = combinarAtributos(atributosSeccion, null);
+  validarAtributosObligatorios(mapaAtributosSeccion, "SECTION", new String[]{"width", "height", "pointX", "pointY"});
+  LayoutProps propiedadesLayout = new LayoutProps(
+    convertirADouble(mapaAtributosSeccion.get("width")),
+    convertirADouble(mapaAtributosSeccion.get("height")),
+    convertirADouble(mapaAtributosSeccion.get("pointX")),
+    convertirADouble(mapaAtributosSeccion.get("pointY"))
+  );
+  Orientacion orientacionSeccion = convertirAOrientacion(mapaAtributosSeccion.get("orientation"));
+  ArrayList<FormElement> elementosInternos = extraerElementosFormulario(mapaAtributosSeccion.get("elements"));
+  StyleSet estilosSeccion = construirEstilos(mapaAtributosSeccion.get("styles"));
+  RESULT = new SectionElement(propiedadesLayout, orientacionSeccion, elementosInternos, estilosSeccion);
+:}
+;
 
-atributos_section ::= atributos_section COMA atributo_section
-                    | atributo_section
+atributos_section ::= atributos_section:atributosAcumulados COMA atributo_section:atributoActual
+                    {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                    | atributo_section:atributoActual
+                    {: RESULT = atributoActual; :}
 ;
 
 atributo_section ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-    | POINTX DOS_PUNTOS expresion
-    | POINTY DOS_PUNTOS expresion
-    | ORIENTATION DOS_PUNTOS orientacion
-    | ELEMENTS DOS_PUNTOS LLAVE_IZQ lista_elementos LLAVE_DER
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | POINTX DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointX", v); :}
+    | POINTY DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointY", v); :}
+    | ORIENTATION DOS_PUNTOS no_terminal_orientacion:v
+      {: RESULT = crearAtributo("orientation", v); :}
+    | ELEMENTS DOS_PUNTOS LLAVE_IZQ lista_elementos:v LLAVE_DER
+      {: RESULT = crearAtributo("elements", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
 
@@ -238,19 +466,41 @@ atributo_section ::=
 TABLE
 ================================================= */
 
-tabla ::= TABLE COR_IZQ atributos_tabla COR_DER ;
+tabla ::= TABLE COR_IZQ atributos_tabla:atributosTabla COR_DER
+{:
+  HashMap<String, Object> mapaAtributosTabla = combinarAtributos(atributosTabla, null);
+  validarAtributosObligatorios(mapaAtributosTabla, "TABLE", new String[]{"width", "height", "pointX", "pointY"});
+  LayoutProps propiedadesLayout = new LayoutProps(
+    convertirADouble(mapaAtributosTabla.get("width")),
+    convertirADouble(mapaAtributosTabla.get("height")),
+    convertirADouble(mapaAtributosTabla.get("pointX")),
+    convertirADouble(mapaAtributosTabla.get("pointY"))
+  );
+  ArrayList<TableRow> filasTabla = extraerFilasTabla(mapaAtributosTabla.get("rows"));
+  StyleSet estilosTabla = construirEstilos(mapaAtributosTabla.get("styles"));
+  RESULT = new TableElement(propiedadesLayout, filasTabla, estilosTabla);
+:}
+;
 
-atributos_tabla ::= atributos_tabla COMA atributo_tabla
-                  | atributo_tabla
+atributos_tabla ::= atributos_tabla:atributosAcumulados COMA atributo_tabla:atributoActual
+                  {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                  | atributo_tabla:atributoActual
+                  {: RESULT = atributoActual; :}
 ;
 
 atributo_tabla ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-    | POINTX DOS_PUNTOS expresion
-    | POINTY DOS_PUNTOS expresion
-    | ELEMENTS DOS_PUNTOS LLAVE_IZQ filas LLAVE_DER
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | POINTX DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointX", v); :}
+    | POINTY DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointY", v); :}
+    | ELEMENTS DOS_PUNTOS LLAVE_IZQ filas:v LLAVE_DER
+      {: RESULT = crearAtributo("rows", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
 
@@ -258,19 +508,39 @@ atributo_tabla ::=
 TEXT
 ================================================= */
 
-texto ::= TEXT COR_IZQ atributos_texto COR_DER ;
+texto ::= TEXT COR_IZQ atributos_texto:atributosTexto COR_DER
+{:
+  HashMap<String, Object> mapaAtributosTexto = combinarAtributos(atributosTexto, null);
+  LayoutProps propiedadesLayout = new LayoutProps(
+    convertirADouble(mapaAtributosTexto.get("width")),
+    convertirADouble(mapaAtributosTexto.get("height")),
+    convertirADouble(mapaAtributosTexto.get("pointX")),
+    convertirADouble(mapaAtributosTexto.get("pointY"))
+  );
+  StyleSet estilosTexto = construirEstilos(mapaAtributosTexto.get("styles"));
+  RESULT = new TextElement(propiedadesLayout, convertirATexto(mapaAtributosTexto.get("content")), estilosTexto);
+:}
+;
 
-atributos_texto ::= atributos_texto COMA atributo_texto
-                  | atributo_texto
+atributos_texto ::= atributos_texto:atributosAcumulados COMA atributo_texto:atributoActual
+                  {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                  | atributo_texto:atributoActual
+                  {: RESULT = atributoActual; :}
 ;
 
 atributo_texto ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-    | POINTX DOS_PUNTOS expresion
-    | POINTY DOS_PUNTOS expresion
-    | CONTENT DOS_PUNTOS cadena_con_emojis
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | POINTX DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointX", v); :}
+    | POINTY DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("pointY", v); :}
+    | CONTENT DOS_PUNTOS cadena_con_emojis:v
+      {: RESULT = crearAtributo("content", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
 
@@ -279,102 +549,218 @@ PREGUNTAS
 ================================================= */
 
 pregunta ::=
-      OPEN_QUESTION COR_IZQ atributos_open_pregunta COR_DER
-    | DROP_QUESTION COR_IZQ atributos_drop_pregunta COR_DER
-    | SELECT_QUESTION COR_IZQ atributos_select_pregunta COR_DER
-    | MULTIPLE_QUESTION COR_IZQ atributos_multiple_pregunta COR_DER
+      OPEN_QUESTION COR_IZQ atributos_open_pregunta:atributosOpen COR_DER
+      {:
+        HashMap<String, Object> mapaAtributosOpen = combinarAtributos(atributosOpen, null);
+        validarAtributosObligatorios(mapaAtributosOpen, "OPEN_QUESTION", new String[]{"label"});
+        LayoutProps propiedadesLayout = new LayoutProps(convertirADouble(mapaAtributosOpen.get("width")), convertirADouble(mapaAtributosOpen.get("height")), null, null);
+        StyleSet estilosPregunta = construirEstilos(mapaAtributosOpen.get("styles"));
+        OpenQuestionElement preguntaAbierta = new OpenQuestionElement(propiedadesLayout, convertirATexto(mapaAtributosOpen.get("label")), estilosPregunta);
+        RESULT = crearPreguntaConComodines(preguntaAbierta, mapaAtributosOpen);
+      :}
+    | DROP_QUESTION COR_IZQ atributos_drop_pregunta:atributosDrop COR_DER
+      {:
+        HashMap<String, Object> mapaAtributosDrop = combinarAtributos(atributosDrop, null);
+        validarAtributosObligatorios(mapaAtributosDrop, "DROP_QUESTION", new String[]{"label", "optionsSource"});
+        LayoutProps propiedadesLayout = new LayoutProps(convertirADouble(mapaAtributosDrop.get("width")), convertirADouble(mapaAtributosDrop.get("height")), null, null);
+        Object origenOpcionesCrudo = mapaAtributosDrop.get("optionsSource");
+        OptionsSource fuenteOpciones = origenOpcionesCrudo instanceof OptionsSource ? (OptionsSource) origenOpcionesCrudo : new OptionsSource.Static(new ArrayList<>());
+        Integer indiceCorrecto = convertirAEntero(mapaAtributosDrop.get("correct"));
+        int totalOpciones = fuenteOpciones instanceof OptionsSource.Static ? ((OptionsSource.Static) fuenteOpciones).getOptions().size() : (((OptionsSource.PokemonRange) fuenteOpciones).getEnd() - ((OptionsSource.PokemonRange) fuenteOpciones).getStart()) + 1;
+        validarIndiceCorrecto("DROP_QUESTION", indiceCorrecto, totalOpciones);
+        StyleSet estilosPregunta = construirEstilos(mapaAtributosDrop.get("styles"));
+        DropQuestionElement preguntaDesplegable = new DropQuestionElement(propiedadesLayout, convertirATexto(mapaAtributosDrop.get("label")), fuenteOpciones, indiceCorrecto == null ? -1 : indiceCorrecto, estilosPregunta);
+        RESULT = crearPreguntaConComodines(preguntaDesplegable, mapaAtributosDrop);
+      :}
+    | SELECT_QUESTION COR_IZQ atributos_select_pregunta:atributosSelect COR_DER
+      {:
+        HashMap<String, Object> mapaAtributosSelect = combinarAtributos(atributosSelect, null);
+        validarAtributosObligatorios(mapaAtributosSelect, "SELECT_QUESTION", new String[]{"options"});
+        LayoutProps propiedadesLayout = new LayoutProps(convertirADouble(mapaAtributosSelect.get("width")), convertirADouble(mapaAtributosSelect.get("height")), null, null);
+        ArrayList<String> opcionesPregunta = extraerListaTextos(mapaAtributosSelect.get("options"));
+        Integer indiceCorrecto = convertirAEntero(mapaAtributosSelect.get("correct"));
+        validarIndiceCorrecto("SELECT_QUESTION", indiceCorrecto, opcionesPregunta.size());
+        validarCantidadOpcionesSelect(opcionesPregunta);
+        StyleSet estilosPregunta = construirEstilos(mapaAtributosSelect.get("styles"));
+        SelectQuestionElement preguntaSeleccion = new SelectQuestionElement(propiedadesLayout, opcionesPregunta, indiceCorrecto, estilosPregunta);
+        RESULT = crearPreguntaConComodines(preguntaSeleccion, mapaAtributosSelect);
+      :}
+    | MULTIPLE_QUESTION COR_IZQ atributos_multiple_pregunta:atributosMultiple COR_DER
+      {:
+        HashMap<String, Object> mapaAtributosMultiple = combinarAtributos(atributosMultiple, null);
+        validarAtributosObligatorios(mapaAtributosMultiple, "MULTIPLE_QUESTION", new String[]{"options"});
+        LayoutProps propiedadesLayout = new LayoutProps(convertirADouble(mapaAtributosMultiple.get("width")), convertirADouble(mapaAtributosMultiple.get("height")), null, null);
+        ArrayList<String> opcionesPregunta = extraerListaTextos(mapaAtributosMultiple.get("options"));
+        ArrayList<Integer> indicesCorrectos = extraerListaEnteros(mapaAtributosMultiple.get("correctList"));
+        validarIndicesCorrectos("MULTIPLE_QUESTION", indicesCorrectos, opcionesPregunta.size());
+        StyleSet estilosPregunta = construirEstilos(mapaAtributosMultiple.get("styles"));
+        MultipleQuestionElement preguntaMultiple = new MultipleQuestionElement(propiedadesLayout, opcionesPregunta, indicesCorrectos, estilosPregunta);
+        RESULT = crearPreguntaConComodines(preguntaMultiple, mapaAtributosMultiple);
+      :}
 ;
 
-atributos_open_pregunta ::= atributos_open_pregunta COMA atributo_open_pregunta
-                          | atributo_open_pregunta
+atributos_open_pregunta ::= atributos_open_pregunta:atributosAcumulados COMA atributo_open_pregunta:atributoActual
+                          {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                          | atributo_open_pregunta:atributoActual
+                          {: RESULT = atributoActual; :}
 ;
 
 atributo_open_pregunta ::= 
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-    | LABEL DOS_PUNTOS cadena_con_emojis
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | LABEL DOS_PUNTOS cadena_con_emojis:v
+      {: RESULT = crearAtributo("label", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
-atributos_drop_pregunta ::= atributos_drop_pregunta COMA atributo_drop_pregunta
-                          | atributo_drop_pregunta
+atributos_drop_pregunta ::= atributos_drop_pregunta:atributosAcumulados COMA atributo_drop_pregunta:atributoActual
+                          {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                          | atributo_drop_pregunta:atributoActual
+                          {: RESULT = atributoActual; :}
 ;
 
 atributo_drop_pregunta ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-    | LABEL DOS_PUNTOS cadena_con_emojis
-  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
-    | OPTIONS DOS_PUNTOS WHO_IS_THAT_POKEMON PAREN_IZQ argumento_pokemon COMA ENTERO COMA ENTERO PAREN_DER
-  | CORRECT DOS_PUNTOS expresion_aritmetica
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | LABEL DOS_PUNTOS cadena_con_emojis:v
+      {: RESULT = crearAtributo("label", v); :}
+    | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2:v LLAVE_DER
+      {: RESULT = crearAtributo("optionsSource", new OptionsSource.Static(extraerListaTextos(v))); :}
+    | OPTIONS DOS_PUNTOS WHO_IS_THAT_POKEMON PAREN_IZQ argumento_pokemon:selector COMA ENTERO:start COMA ENTERO:end PAREN_DER
+      {:
+        String selectorRango = convertirATexto(selector);
+        int inicioRango = convertirAEntero(start) == null ? 0 : convertirAEntero(start);
+        int finRango = convertirAEntero(end) == null ? 0 : convertirAEntero(end);
+        RESULT = crearAtributo("optionsSource", new OptionsSource.PokemonRange(selectorRango, inicioRango, finRango));
+      :}
+    | CORRECT DOS_PUNTOS expresion_aritmetica:v
+      {: RESULT = crearAtributo("correct", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
-atributos_select_pregunta ::= atributos_select_pregunta COMA atributo_select_pregunta
-                            | atributo_select_pregunta
+atributos_select_pregunta ::= atributos_select_pregunta:atributosAcumulados COMA atributo_select_pregunta:atributoActual
+                            {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                            | atributo_select_pregunta:atributoActual
+                            {: RESULT = atributoActual; :}
 ;
 
 atributo_select_pregunta ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
-  | CORRECT DOS_PUNTOS expresion_aritmetica
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2:v LLAVE_DER
+      {: RESULT = crearAtributo("options", v); :}
+    | CORRECT DOS_PUNTOS expresion_aritmetica:v
+      {: RESULT = crearAtributo("correct", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
-atributos_multiple_pregunta ::= atributos_multiple_pregunta COMA atributo_multiple_pregunta
-                              | atributo_multiple_pregunta
+atributos_multiple_pregunta ::= atributos_multiple_pregunta:atributosAcumulados COMA atributo_multiple_pregunta:atributoActual
+                              {: RESULT = combinarAtributos(atributosAcumulados, atributoActual); :}
+                              | atributo_multiple_pregunta:atributoActual
+                              {: RESULT = atributoActual; :}
 ;
 
 atributo_multiple_pregunta ::=
-      WIDTH DOS_PUNTOS expresion
-    | HEIGHT DOS_PUNTOS expresion
-  | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2 LLAVE_DER
-    | CORRECT DOS_PUNTOS LLAVE_IZQ lista_numeros LLAVE_DER
-    | STYLES COR_IZQ lista_estilos COR_DER
+      WIDTH DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("width", v); :}
+    | HEIGHT DOS_PUNTOS expresion:v
+      {: RESULT = crearAtributo("height", v); :}
+    | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2:v LLAVE_DER
+      {: RESULT = crearAtributo("options", v); :}
+    | CORRECT DOS_PUNTOS LLAVE_IZQ lista_numeros:v LLAVE_DER
+      {: RESULT = crearAtributo("correctList", v); :}
+    | STYLES COR_IZQ lista_estilos:v COR_DER
+      {: RESULT = crearAtributo("styles", v); :}
 ;
 
-orientacion ::= VERTICAL | HORIZONTAL ;
+no_terminal_orientacion ::= VERTICAL:v {: RESULT = v; :}
+              | HORIZONTAL:v {: RESULT = v; :}
+;
 
 
 /* =================================================
 ESTILOS
 ================================================= */
 
-lista_estilos ::= lista_estilos COMA estilo
-                | estilo
+lista_estilos ::= lista_estilos:estilosAcumulados COMA estilo:estiloActual
+                {: RESULT = combinarAtributos(estilosAcumulados, estiloActual); :}
+                | estilo:estiloActual
+                {: RESULT = estiloActual; :}
 ;
 
 estilo ::=
-      COLOR DOS_PUNTOS colores
-    | BACKGROUND_COLOR DOS_PUNTOS colores
-    | FONT_FAMILY DOS_PUNTOS fuentes
-    | TEXT_SIZE DOS_PUNTOS expresion
-  | BORDER DOS_PUNTOS PAREN_IZQ expresion COMA bordes COMA colores PAREN_DER
+      COLOR DOS_PUNTOS colores:colorTexto
+      {: RESULT = crearAtributo("textColor", colorTexto); :}
+    | BACKGROUND_COLOR DOS_PUNTOS colores:colorFondo
+      {: RESULT = crearAtributo("backgroundColor", colorFondo); :}
+    | FONT_FAMILY DOS_PUNTOS fuentes:fuenteTexto
+      {: RESULT = crearAtributo("fontFamily", fuenteTexto); :}
+    | TEXT_SIZE DOS_PUNTOS expresion:tamanioTexto
+      {: RESULT = crearAtributo("textSize", tamanioTexto); :}
+    | BORDER DOS_PUNTOS PAREN_IZQ expresion:tamanioBorde COMA bordes:tipoBorde COMA colores:colorBorde PAREN_DER
+      {: RESULT = crearAtributo("border", crearEstiloBorde(tamanioBorde, tipoBorde, colorBorde)); :}
 ;
 
 colores ::=
-      RED | BLUE | GREEN | PURPLE | SKY | YELLOW | BLACK | WHITE
-    | RGB_COLOR | HEX_COLOR | HSL_COLOR
+      RED:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | BLUE:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | GREEN:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | PURPLE:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | SKY:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | YELLOW:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | BLACK:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | WHITE:colorNombrado {: RESULT = crearColorNombrado(colorNombrado); :}
+    | RGB_COLOR:colorEspecial {: RESULT = crearColorDesdeTexto(colorEspecial); :}
+    | HEX_COLOR:colorEspecial {: RESULT = crearColorDesdeTexto(colorEspecial); :}
+    | HSL_COLOR:colorEspecial {: RESULT = crearColorDesdeTexto(colorEspecial); :}
 ;
 
-fuentes ::= MONO | SANS_SERIF | CURSIVE ;
+fuentes ::= MONO:fuenteTexto {: RESULT = convertirAFuente(fuenteTexto); :}
+          | SANS_SERIF:fuenteTexto {: RESULT = convertirAFuente(fuenteTexto); :}
+          | CURSIVE:fuenteTexto {: RESULT = convertirAFuente(fuenteTexto); :}
+;
 
-bordes ::= LINE | DOTTED | DOUBLE ;
+bordes ::= LINE:tipoBorde {: RESULT = convertirATipoBorde(tipoBorde); :}
+         | DOTTED:tipoBorde {: RESULT = convertirATipoBorde(tipoBorde); :}
+         | DOUBLE:tipoBorde {: RESULT = convertirATipoBorde(tipoBorde); :}
+;
 
 
 /* =================================================
 ELEMENTOS
 ================================================= */
 
-lista_elementos ::= lista_elementos COMA elemento
-                  | elemento
+lista_elementos ::= lista_elementos:listaElementosActual COMA elemento:elementoReducido
+                  {:
+                    ArrayList<FormElement> elementosAcumulados = extraerElementosFormulario(listaElementosActual);
+                    if (elementoReducido instanceof FormElement) elementosAcumulados.add((FormElement) elementoReducido);
+                    RESULT = elementosAcumulados;
+                  :}
+                  | elemento:elementoReducido
+                  {:
+                    ArrayList<FormElement> elementosIniciales = new ArrayList<>();
+                    if (elementoReducido instanceof FormElement) elementosIniciales.add((FormElement) elementoReducido);
+                    RESULT = elementosIniciales;
+                  :}
 ;
 
-elemento ::= seccion
-           | tabla
-           | texto
-           | pregunta
+elemento ::= seccion:s
+           {: RESULT = s; :}
+           | tabla:t
+           {: RESULT = t; :}
+           | texto:tx
+           {: RESULT = tx; :}
+           | pregunta:q
+           {: RESULT = extraerPreguntaElemento(q); :}
 ;
 
 
@@ -382,33 +768,101 @@ elemento ::= seccion
 TABLAS
 ================================================= */
 
-filas ::= filas COMA fila
-        | fila
+filas ::= filas:listaFilasActual COMA fila:filaReducida
+        {:
+          ArrayList<TableRow> filasAcumuladas = extraerFilasTabla(listaFilasActual);
+          if (filaReducida instanceof TableRow) filasAcumuladas.add((TableRow) filaReducida);
+          RESULT = filasAcumuladas;
+        :}
+        | fila:filaReducida
+        {:
+          ArrayList<TableRow> listaFilasInicial = new ArrayList<>();
+          if (filaReducida instanceof TableRow) listaFilasInicial.add((TableRow) filaReducida);
+          RESULT = listaFilasInicial;
+        :}
 ;
 
-fila ::= COR_IZQ lista_celdas COR_DER ;
-
-lista_celdas ::= lista_celdas COMA celda
-               | celda
+fila ::= COR_IZQ lista_celdas:cells COR_DER
+{:
+  ArrayList<TableCell> celdasFila = new ArrayList<>();
+  if (cells instanceof List<?>) {
+    for (Object celdaCruda : (List<?>) cells) {
+      if (celdaCruda instanceof TableCell) celdasFila.add((TableCell) celdaCruda);
+    }
+  }
+  RESULT = new TableRow(celdasFila);
+:}
 ;
 
-celda ::= LLAVE_IZQ elemento LLAVE_DER ;
+lista_celdas ::= lista_celdas:listaCeldasActual COMA celda:celdaReducida
+               {:
+                 ArrayList<TableCell> celdasAcumuladas = new ArrayList<>();
+                 if (listaCeldasActual instanceof List<?>) {
+                   for (Object celdaCruda : (List<?>) listaCeldasActual) {
+                     if (celdaCruda instanceof TableCell) celdasAcumuladas.add((TableCell) celdaCruda);
+                   }
+                 }
+                 if (celdaReducida instanceof TableCell) celdasAcumuladas.add((TableCell) celdaReducida);
+                 RESULT = celdasAcumuladas;
+               :}
+               | celda:celdaReducida
+               {:
+                 ArrayList<TableCell> listaCeldasInicial = new ArrayList<>();
+                 if (celdaReducida instanceof TableCell) listaCeldasInicial.add((TableCell) celdaReducida);
+                 RESULT = listaCeldasInicial;
+               :}
+;
+
+celda ::= LLAVE_IZQ elemento:elementoCelda LLAVE_DER
+{:
+  if (elementoCelda instanceof FormElement) {
+    RESULT = new TableCell((FormElement) elementoCelda);
+  } else {
+    RESULT = null;
+  }
+:}
+;
 
 
 /* =================================================
 OPCIONES
 ================================================= */
 
-lista_opciones_min2 ::= cadena_con_emojis COMA cadena_con_emojis
-                     | lista_opciones_min2 COMA cadena_con_emojis
+lista_opciones_min2 ::= cadena_con_emojis:opcionInicial COMA cadena_con_emojis:segundaOpcion
+                     {:
+                       ArrayList<String> opcionesIniciales = new ArrayList<>();
+                       opcionesIniciales.add(convertirATexto(opcionInicial));
+                       opcionesIniciales.add(convertirATexto(segundaOpcion));
+                       RESULT = opcionesIniciales;
+                     :}
+                     | lista_opciones_min2:listaOpcionesActual COMA cadena_con_emojis:opcionReducida
+                     {:
+                       ArrayList<String> opcionesAcumuladas = extraerListaTextos(listaOpcionesActual);
+                       opcionesAcumuladas.add(convertirATexto(opcionReducida));
+                       RESULT = opcionesAcumuladas;
+                     :}
 ;
 
-argumento_pokemon ::= NUMBER
-                    | expresion_aritmetica
+argumento_pokemon ::= NUMBER:v
+                    {: RESULT = v; :}
+                    | expresion_aritmetica:v
+                    {: RESULT = v; :}
 ;
 
-lista_numeros ::= lista_numeros COMA ENTERO
-                | ENTERO
+lista_numeros ::= lista_numeros:listaNumerosActual COMA ENTERO:numeroReducido
+                {:
+                  ArrayList<Integer> numerosAcumulados = extraerListaEnteros(listaNumerosActual);
+                  Integer numeroConvertido = convertirAEntero(numeroReducido);
+                  if (numeroConvertido != null) numerosAcumulados.add(numeroConvertido);
+                  RESULT = numerosAcumulados;
+                :}
+                | ENTERO:numeroReducido
+                {:
+                  ArrayList<Integer> listaNumerosInicial = new ArrayList<>();
+                  Integer numeroConvertido = convertirAEntero(numeroReducido);
+                  if (numeroConvertido != null) listaNumerosInicial.add(numeroConvertido);
+                  RESULT = listaNumerosInicial;
+                :}
 ;
 
 
@@ -439,7 +893,10 @@ bloque_do ::= DO LLAVE_IZQ lista_instrucciones LLAVE_DER
 bloque_for ::=
   FOR PAREN_IZQ asignacion_numerica PUNTOYCOMA expresion_logica PUNTOYCOMA asignacion_numerica PAREN_DER
       LLAVE_IZQ lista_instrucciones LLAVE_DER
-    | FOR PAREN_IZQ ID IN expresion RANGO expresion PAREN_DER
+    | FOR PAREN_IZQ ID:id IN expresion RANGO expresion PAREN_DER
+      {:
+        prepararVariableFor(id.toString());
+      :}
       LLAVE_IZQ lista_instrucciones LLAVE_DER
 ;
 
@@ -448,45 +905,45 @@ bloque_for ::=
 EXPRESIONES
 ================================================= */
 
-expresion ::= expresion_logica ;
+expresion ::= expresion_logica:valorExpresion {: RESULT = valorExpresion; :} ;
 
 expresion_logica ::=
-      expresion_logica_or
-    | expresion_logica_and
-    | NOT expresion_logica
-    | expresion_comparacion
+      expresion_logica_or:valorLogico {: RESULT = valorLogico; :}
+    | expresion_logica_and:valorLogico {: RESULT = valorLogico; :}
+    | NOT expresion_logica:valorLogico {: RESULT = negarOperacionLogica(valorLogico); :}
+    | expresion_comparacion:valorComparacion {: RESULT = valorComparacion; :}
 ;
 
 expresion_logica_or ::=
-      expresion_logica_or OR expresion_comparacion
-    | expresion_comparacion OR expresion_comparacion
+      expresion_logica_or:izquierda OR expresion_comparacion:derecha {: RESULT = evaluarOperacionLogica(izquierda, derecha, "OR"); :}
+    | expresion_comparacion:izquierda OR expresion_comparacion:derecha {: RESULT = evaluarOperacionLogica(izquierda, derecha, "OR"); :}
 ;
 
 expresion_logica_and ::=
-      expresion_logica_and AND expresion_comparacion
-    | expresion_comparacion AND expresion_comparacion
+      expresion_logica_and:izquierda AND expresion_comparacion:derecha {: RESULT = evaluarOperacionLogica(izquierda, derecha, "AND"); :}
+    | expresion_comparacion:izquierda AND expresion_comparacion:derecha {: RESULT = evaluarOperacionLogica(izquierda, derecha, "AND"); :}
 ;
 
 expresion_comparacion ::=
-      expresion_aritmetica MAYOR expresion_aritmetica
-    | expresion_aritmetica MENOR expresion_aritmetica
-    | expresion_aritmetica MAYOR_IGUAL expresion_aritmetica
-    | expresion_aritmetica MENOR_IGUAL expresion_aritmetica
-    | expresion_aritmetica IGUAL expresion_aritmetica
-    | expresion_aritmetica DIFERENTE expresion_aritmetica
-    | expresion_aritmetica
+      expresion_aritmetica:izquierda MAYOR expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, ">"); :}
+    | expresion_aritmetica:izquierda MENOR expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, "<"); :}
+    | expresion_aritmetica:izquierda MAYOR_IGUAL expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, ">="); :}
+    | expresion_aritmetica:izquierda MENOR_IGUAL expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, "<="); :}
+    | expresion_aritmetica:izquierda IGUAL expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, "=="); :}
+    | expresion_aritmetica:izquierda DIFERENTE expresion_aritmetica:derecha {: RESULT = evaluarComparacion(izquierda, derecha, "!="); :}
+    | expresion_aritmetica:valorAritmetico {: RESULT = valorAritmetico; :}
 ;
 
 expresion_aritmetica ::=
-      expresion_aritmetica MAS expresion_aritmetica
-    | expresion_aritmetica MENOS expresion_aritmetica
-    | expresion_aritmetica POR expresion_aritmetica
-    | expresion_aritmetica DIV expresion_aritmetica
-    | expresion_aritmetica POTENCIA expresion_aritmetica
-    | expresion_aritmetica MODULO expresion_aritmetica
-    | MENOS expresion_aritmetica %prec UMINUS
-    | PAREN_IZQ expresion_aritmetica PAREN_DER
-    | valor
+      expresion_aritmetica:izquierda MAS expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "+"); :}
+    | expresion_aritmetica:izquierda MENOS expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "-"); :}
+    | expresion_aritmetica:izquierda POR expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "*"); :}
+    | expresion_aritmetica:izquierda DIV expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "/"); :}
+    | expresion_aritmetica:izquierda POTENCIA expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "^"); :}
+    | expresion_aritmetica:izquierda MODULO expresion_aritmetica:derecha {: RESULT = evaluarOperacionAritmetica(izquierda, derecha, "%"); :}
+    | MENOS expresion_aritmetica:valorNegado {: RESULT = evaluarOperacionAritmetica(crearResultadoValor(0.0), valorNegado, "-"); :} %prec UMINUS
+    | PAREN_IZQ expresion_aritmetica:valorInterno PAREN_DER {: RESULT = valorInterno; :}
+    | valor:valorReducido {: RESULT = valorReducido; :}
 ;
 
 
@@ -495,10 +952,10 @@ VALORES
 ================================================= */
 
 valor ::=
-      ENTERO
-    | DECIMAL
-    | ID
-  | WILDCARD
+      ENTERO:numeroEntero {: RESULT = crearResultadoValor(convertirADouble(numeroEntero)); :}
+    | DECIMAL:numeroDecimal {: RESULT = crearResultadoValor(convertirADouble(numeroDecimal)); :}
+    | ID:id {: RESULT = resolverValorVariable(id.toString()); :}
+    | WILDCARD {: RESULT = crearResultadoConComodin(); :}
 ;
 
 
@@ -506,7 +963,10 @@ valor ::=
 CADENA CON EMOJIS
 ================================================= */
 
-cadena_con_emojis ::= CADENA
-                    | cadena_con_emojis EMOJI
-                    | EMOJI
+cadena_con_emojis ::= CADENA:value
+                    {: RESULT = normalizarLiteralCadena(value); :}
+                    | cadena_con_emojis:base EMOJI:emoji
+                    {: RESULT = convertirATexto(base) + convertirATexto(emoji); :}
+                    | EMOJI:emoji
+                    {: RESULT = convertirATexto(emoji); :}
 ;

@@ -6,11 +6,7 @@ plugins {
 android {
     namespace = "com.cunoc.compiforms"
 
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.cunoc.compiforms"
@@ -23,7 +19,7 @@ android {
     }
 
     buildFeatures {
-        compose =  true
+        compose = true
     }
 
     buildTypes {
@@ -41,10 +37,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    sourceSets["main"].java.srcDir("$buildDir/generated/sources/parser")
+    sourceSets["main"].java.srcDir("build/generated/sources/parser")
 }
 
-val generatedSrcDir = "$buildDir/generated/sources/parser"
+kotlin {
+    jvmToolchain(21)
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+val generatedSrcDir = "build/generated/sources/parser"
 
 configurations {
     create("jflex")
@@ -61,10 +67,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // Runtime necesario para CUP
     implementation("com.github.vbmacher:java-cup-runtime:11b-20160615")
 
-    // Herramientas de generación
     "jflex"("de.jflex:jflex:1.9.1")
     "cup"("com.github.vbmacher:java-cup:11b-20160615")
 
@@ -74,7 +78,6 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
     debugImplementation(libs.androidx.compose.ui.tooling)
-
 }
 
 tasks.register<JavaExec>("generateParser") {
