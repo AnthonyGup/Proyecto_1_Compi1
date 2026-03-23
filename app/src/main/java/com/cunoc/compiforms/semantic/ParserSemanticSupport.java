@@ -22,80 +22,77 @@ import java.util.Map;
  * el Parser lee el código del usuario.
  */
 public class ParserSemanticSupport {
-    private final Parser elParser;
+    private final Parser parser;
     
     // Aquí guardamos las variables que el usuario declara en su script
-    private final HashMap<String, Variable<?>> tablaDeVariables = new HashMap<>();
+    private final HashMap<String, Variable<?>> variableTable = new HashMap<>();
     
     // Listas para recolectar problemas encontrados durante el análisis
-    private final ArrayList<String> erroresSemanticos = new ArrayList<>();
-    private final ArrayList<String> advertenciasSemanticas = new ArrayList<>();
+    private final ArrayList<String> semanticErrors = new ArrayList<>();
+    private final ArrayList<String> semanticWarnings = new ArrayList<>();
     
-    // Estos son nuestros "expertos" en diferentes áreas
-    private final SemanticValueSupport expertoEnValores;
-    private final VariableSemanticSupport expertoEnVariables;
-    private final ExpressionSemanticSupport expertoEnExpresiones;
-    private final QuestionSemanticSupport expertoEnPreguntas;
+    private final LogicalOperatorValidator validadorOperadoresLogicos;
     
     // Aquí se va armando la estructura final del formulario
-    private FormDocument documentoFormulario = new FormDocument(new ArrayList<>());
+    private FormDocument parsedDocument = new FormDocument(new ArrayList<>());
 
     public ParserSemanticSupport(Parser parser) {
-        this.elParser = parser;
-        
-        // Inicializamos a nuestros expertos
-        this.expertoEnValores = new SemanticValueSupport(this);
-        this.expertoEnVariables = new VariableSemanticSupport(tablaDeVariables, expertoEnValores, this);
-        this.expertoEnExpresiones = new ExpressionSemanticSupport(expertoEnValores, this);
-        this.expertoEnPreguntas = new QuestionSemanticSupport(tablaDeVariables, expertoEnValores, this);
+        this.parser = parser;
+        this.validadorOperadoresLogicos = new LogicalOperatorValidator();
     }
 
-    // Métodos para que el Parser pueda acceder a cada experto de forma clara
-    public SemanticValueSupport getValores() { return expertoEnValores; }
-    public VariableSemanticSupport getVariablesSoporte() { return expertoEnVariables; }
-    public ExpressionSemanticSupport getExpresiones() { return expertoEnExpresiones; }
-    public QuestionSemanticSupport getPreguntas() { return expertoEnPreguntas; }
+    public LogicalOperatorValidator getValidadorOperadoresLogicos() {
+        return validadorOperadoresLogicos;
+    }
 
     /**
      * Registra un error semántico para mostrarlo al final.
      */
     public void addSemanticError(String mensaje) {
-        this.erroresSemanticos.add(mensaje);
+        this.semanticErrors.add(mensaje);
     }
 
     /**
-     * Registra una advertencia (algo que no detiene el programa pero es sospechoso).
+     * Registra una advertencia
      */
     public void addWarning(String mensaje) {
-        this.advertenciasSemanticas.add(mensaje);
+        this.semanticWarnings.add(mensaje);
     }
 
-    public List<String> getWarnings() { return advertenciasSemanticas; }
-    public List<String> getSemanticErrors() { return erroresSemanticos; }
-    public Map<String, Variable<?>> getVariables() { return tablaDeVariables; }
+    public List<String> getWarnings() {
+        return semanticWarnings;
+    }
+
+    public List<String> getSemanticErrors() {
+        return semanticErrors;
+    }
+
+    public Map<String, Variable<?>> getVariables() {
+        return variableTable;
+    }
 
     /**
-     * Construye el resultado final combinando todo lo que recolectamos.
+     * Construye el resultado final combinando todito
      */
     public ParseResult getParseResult() {
-        Lexer lexerDelParser = elParser.getLexer();
+        Lexer parserLexer = parser.getLexer();
         
-        List<TokenInfo> listaDeTokens = new ArrayList<>();
-        List<ErrorInfo> listaDeErroresLexicos = new ArrayList<>();
+        List<TokenInfo> tokenList = new ArrayList<>();
+        List<ErrorInfo> lexicalErrorList = new ArrayList<>();
         
-        if (lexerDelParser != null) {
-            listaDeTokens = lexerDelParser.getTokens();
-            listaDeErroresLexicos = lexerDelParser.getErrors();
+        if (parserLexer != null) {
+            tokenList = parserLexer.getTokens();
+            lexicalErrorList = parserLexer.getErrors();
         }
         
         return new ParseResult(
-            documentoFormulario,
-            tablaDeVariables,
-            listaDeTokens,
-            listaDeErroresLexicos,
-            elParser.getSyntaxErrors(),
-            erroresSemanticos,
-            advertenciasSemanticas
+            parsedDocument,
+            variableTable,
+            tokenList,
+            lexicalErrorList,
+            parser.getSyntaxErrors(),
+            semanticErrors,
+            semanticWarnings
         );
     }
 
@@ -103,37 +100,40 @@ public class ParserSemanticSupport {
      * Crea un objeto que representa un valor simple (sin comodines '?').
      */
     public Object crearResultadoValor(Object valorReal) { 
-        return new ResultadoValor(valorReal, 0, null); 
+        return new ResultadoValor(valorReal, 0, null);
     }
 
     /**
      * Crea un objeto que representa un comodín '?' usado en una expresión.
      */
     public Object crearResultadoConComodin() { 
-        return new ResultadoValor(null, 1, null); 
+        return new ResultadoValor(null, 1, null);
     }
 
     /**
-     * Extrae el objeto de pregunta real, sin importar si viene envuelta
+     * Extrae el objeto de pregunta, sin importar si viene envuelta
      * por el sistema de comodines.
      */
     public QuestionElement extraerPreguntaElemento(Object valorRecibido) {
-        // Si el valor es una pregunta que contiene comodines (?)
         if (valorRecibido instanceof PreguntaConComodines) {
-            PreguntaConComodines envoltorio = (PreguntaConComodines) valorRecibido;
-            return envoltorio.pregunta;
+            PreguntaConComodines wrappedQuestion = (PreguntaConComodines) valorRecibido;
+            return wrappedQuestion.pregunta;
         }
-        
-        // Si el valor ya es directamente el objeto de la pregunta
+
         if (valorRecibido instanceof QuestionElement) {
-            QuestionElement preguntaDirecta = (QuestionElement) valorRecibido;
-            return preguntaDirecta;
+            QuestionElement directQuestion = (QuestionElement) valorRecibido;
+            return directQuestion;
         }
-        
-        // Si no es ninguna de las anteriores, devolvemos nada
+
         return null;
     }
-    
-    public FormDocument getParsedDocument() { return documentoFormulario; }
-    public void setParsedDocument(FormDocument doc) { this.documentoFormulario = doc; }
+
+    public FormDocument getParsedDocument() {
+        return parsedDocument;
+    }
+
+    public void setParsedDocument(FormDocument doc) {
+        this.parsedDocument = doc;
+    }
+
 }

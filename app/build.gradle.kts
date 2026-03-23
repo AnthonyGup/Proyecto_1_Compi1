@@ -41,7 +41,9 @@ android {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 java {
@@ -51,6 +53,8 @@ java {
 }
 
 val generatedSrcDir = "build/generated/sources/parser"
+val pkmGeneratedSrcDir = "$generatedSrcDir/com/cunoc/compiforms/pkm"
+val mainGeneratedSrcDir = "$generatedSrcDir/com/cunoc/compiforms"
 
 configurations {
     create("jflex")
@@ -80,13 +84,15 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
+// --- Tareas para el Parser/Lexer Principal ---
 tasks.register<JavaExec>("generateParser") {
     group = "parser"
     mainClass.set("java_cup.Main")
     classpath = configurations["cup"]
+    doFirst { file(mainGeneratedSrcDir).mkdirs() }
 
     args = listOf(
-        "-destdir", generatedSrcDir,
+        "-destdir", mainGeneratedSrcDir,
         "-parser", "Parser",
         "-symbols", "sym",
         "src/main/cup/parser.cup"
@@ -97,15 +103,50 @@ tasks.register<JavaExec>("generateLexer") {
     group = "parser"
     mainClass.set("jflex.Main")
     classpath = configurations["jflex"]
+    args = listOf("-d", mainGeneratedSrcDir, "src/main/jflex/lexer.flex")
+    doLast {
+        val out = file("$mainGeneratedSrcDir/Lexer.java")
+        if (out.exists()) {
+            val content = out.readText(Charsets.UTF_8)
+            val sanitized = if (content.startsWith("\uFEFF")) content.substring(1) else content
+            out.writeText(sanitized, Charsets.UTF_8)
+        }
+    }
+}
+
+// --- Tareas para el Parser/Lexer PKM ---
+tasks.register<JavaExec>("generatePKMParser") {
+    group = "parser"
+    mainClass.set("java_cup.Main")
+    classpath = configurations["cup"]
+    doFirst { file(pkmGeneratedSrcDir).mkdirs() }
 
     args = listOf(
-        "-d", generatedSrcDir,
-        "src/main/jflex/lexer.flex"
+        "-expect", "0",
+        "-destdir", pkmGeneratedSrcDir,
+        "-parser", "PKMParser",
+        "-symbols", "pkm_sym",
+        "src/main/cup/pkm_parser.cup"
     )
 }
 
+tasks.register<JavaExec>("generatePKMLexer") {
+    group = "parser"
+    mainClass.set("jflex.Main")
+    classpath = configurations["jflex"]
+    args = listOf("-d", pkmGeneratedSrcDir, "src/main/jflex/pkm_lexer.flex")
+    doLast {
+        val out = file("$pkmGeneratedSrcDir/PKMLexer.java")
+        if (out.exists()) {
+            val content = out.readText(Charsets.UTF_8)
+            val sanitized = if (content.startsWith("\uFEFF")) content.substring(1) else content
+            out.writeText(sanitized, Charsets.UTF_8)
+        }
+    }
+}
+
 tasks.register("generateParserAndLexer") {
-    dependsOn("generateParser", "generateLexer")
+    dependsOn("generateParser", "generateLexer", "generatePKMParser", "generatePKMLexer")
 }
 
 tasks.named("preBuild") {

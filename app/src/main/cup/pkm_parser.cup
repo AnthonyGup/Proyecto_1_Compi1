@@ -1,0 +1,242 @@
+package com.cunoc.compiforms.pkm;
+
+import java_cup.runtime.*;
+import com.cunoc.compiforms.form.model.*;
+import com.cunoc.compiforms.form.model.elements.*;
+import com.cunoc.compiforms.form.model.questions.*;
+import com.cunoc.compiforms.form.model.styles.*;
+import java.util.*;
+
+parser code {:
+  private static final String PKM_TEXT_PREFIX = "__PKM_TEXT__::";
+  private boolean hasSyntaxErrors = false;
+
+  public boolean hasSyntaxErrors() {
+    return hasSyntaxErrors;
+  }
+
+  private int parseIntSafe(String raw) {
+    try {
+      return Integer.parseInt(raw);
+    } catch (NumberFormatException ex) {
+      return (int) Double.parseDouble(raw);
+    }
+  }
+
+  private Double parseDimensionOrNull(String raw) {
+    double value = Double.parseDouble(raw);
+    return value <= 0 ? null : value;
+  }
+
+  private FormElement createOpenOrTextElement(String w, String h, String content, StyleSet style) {
+    LayoutProps layout = new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null);
+    if (content != null && content.startsWith(PKM_TEXT_PREFIX)) {
+      return new TextElement(layout, content.substring(PKM_TEXT_PREFIX.length()), style);
+    }
+    return new OpenQuestionElement(layout, content, style);
+  }
+
+    public void syntax_error(Symbol s) {
+      hasSyntaxErrors = true;
+        System.err.println("Error sintáctico en Línea " + (s.left + 1) + " Columna " + (s.right + 1) + ". No se esperaba este componente: " + s.value);
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception {
+      hasSyntaxErrors = true;
+        System.err.println("Error fatal: No se pudo recuperar del error sintáctico.");
+    }
+:};
+
+/* Terminales */
+terminal TRIPLE_HASH, HASH, OPEN_END_TAG, CLOSE_SELF_TAG, LT, GT;
+terminal LBRACE, RBRACE, LBRACK, RBRACK, LPAREN, RPAREN, EQUALS, COLON, COMMA;
+terminal AUTHOR, FECHA, HORA, DESCRIPTION, TOTAL, DE, SECCIONES, PREGUNTAS, ABIERTAS, DESPLEGABLES, SELECCION, MULTIPLES;
+terminal SECTION, TABLE, OPEN, DROP, SELECT, MULTIPLE, STYLE, CONTENT, LINE, ELEMENT;
+terminal COLOR_ATTR, BACKGROUND_ATTR, FONT_ATTR, FAMILY_ATTR, TEXT_ATTR, SIZE_ATTR, BORDER_ATTR;
+terminal DOTTED, DOUBLE;
+terminal java.lang.String NUMBER_VAL, STRING_VAL, HEX_COLOR, COLOR_NAME, FONT_VAL, ORIENTATION_VAL, IDENTIFIER;
+terminal WHO_IS_THAT_POKEMON;
+terminal ERROR;
+
+/* No Terminales */
+non terminal FormDocument pkm_file;
+non terminal metadata, metadata_entries;
+non terminal StyleSet styles_block, style_list, style_item;
+non terminal List<FormElement> elements_list;
+non terminal List<FormElement> elements_list_non_empty;
+non terminal FormElement element;
+non terminal SectionElement section_item;
+non terminal TableElement table_item;
+non terminal FormElement question_item;
+non terminal section_header;
+non terminal List<FormElement> content_block;
+non terminal List<TableRow> line_list;
+non terminal TableRow line_item;
+non terminal List<TableCell> table_elements_list;
+non terminal TableCell table_element;
+non terminal ColorValue color_val;
+non terminal BorderStyle border_spec;
+non terminal OptionsSource options_source;
+non terminal List<String> options_list, string_list;
+non terminal List<Integer> correct_val, number_list;
+non terminal BorderType border_type_val;
+
+start with pkm_file;
+
+pkm_file ::= metadata
+           {: RESULT = new FormDocument(new ArrayList<FormElement>()); :}
+           | metadata elements_list_non_empty:el
+           {: RESULT = new FormDocument(el); :}
+           | metadata styles_block elements_list:el
+           {: RESULT = new FormDocument(el); :}
+           ;
+
+/* Metadatos */
+metadata ::= TRIPLE_HASH metadata_entries TRIPLE_HASH;
+
+metadata_entries ::= AUTHOR COLON STRING_VAL
+                    FECHA COLON STRING_VAL
+                    HORA COLON STRING_VAL
+                    DESCRIPTION COLON STRING_VAL
+                    TOTAL DE SECCIONES COLON NUMBER_VAL
+                    TOTAL DE PREGUNTAS COLON NUMBER_VAL
+                    ABIERTAS COLON NUMBER_VAL
+                    DESPLEGABLES COLON NUMBER_VAL
+                    SELECCION COLON NUMBER_VAL
+                    MULTIPLES COLON NUMBER_VAL;
+
+/* Bloque de Estilos */
+styles_block ::= LT STYLE GT style_list:sl OPEN_END_TAG STYLE GT
+                {: RESULT = sl; :};
+
+style_list ::= style_list:sl style_item:si
+             {: RESULT = si.mergeWith(sl); :}
+             | style_item:si
+             {: RESULT = si; :};
+
+style_item ::= LT COLOR_ATTR EQUALS color_val:cv CLOSE_SELF_TAG
+             {: RESULT = new StyleSet(cv, null, null, null, null); :}
+             | LT BACKGROUND_ATTR COLOR_ATTR EQUALS color_val:cv CLOSE_SELF_TAG
+             {: RESULT = new StyleSet(null, cv, null, null, null); :}
+             | LT FONT_ATTR FAMILY_ATTR EQUALS FONT_VAL:fv CLOSE_SELF_TAG
+             {: RESULT = new StyleSet(null, null, FontFamily.valueOf(fv), null, null); :}
+             | LT TEXT_ATTR SIZE_ATTR EQUALS NUMBER_VAL:nv CLOSE_SELF_TAG
+             {: RESULT = new StyleSet(null, null, null, Double.parseDouble(nv), null); :}
+             | LT BORDER_ATTR COMMA border_spec:bs CLOSE_SELF_TAG
+             {: RESULT = new StyleSet(null, null, null, null, bs); :};
+
+color_val ::= HEX_COLOR:hc
+            {: RESULT = new ColorValue.Hex(hc); :}
+            | COLOR_NAME:cn
+            {: RESULT = new ColorValue.Named(NamedColor.valueOf(cn)); :}
+            | LPAREN NUMBER_VAL:r COMMA NUMBER_VAL:g COMMA NUMBER_VAL:b RPAREN
+            {: RESULT = new ColorValue.Rgb(parseIntSafe(r), parseIntSafe(g), parseIntSafe(b)); :}
+            | LT NUMBER_VAL:h COMMA NUMBER_VAL:s COMMA NUMBER_VAL:l GT
+            {: RESULT = new ColorValue.Hsl(parseIntSafe(h), parseIntSafe(s), parseIntSafe(l)); :};
+
+border_spec ::= NUMBER_VAL:sz COMMA border_type_val:bt COMMA color_val:cv
+              {: RESULT = new BorderStyle(Double.parseDouble(sz), bt, cv); :};
+
+border_type_val ::= LINE {: RESULT = BorderType.LINE; :} | DOTTED {: RESULT = BorderType.DOTTED; :} | DOUBLE {: RESULT = BorderType.DOUBLE; :};
+
+/* Elementos Principales */
+elements_list ::= elements_list:list element:e
+                {: list.add(e); RESULT = list; :}
+                | /* vacío */
+                {: RESULT = new ArrayList<FormElement>(); :} ;
+
+elements_list_non_empty ::= elements_list_non_empty:list element:e
+                          {: list.add(e); RESULT = list; :}
+                          | element:e
+                          {: List<FormElement> l = new ArrayList<>(); l.add(e); RESULT = l; :} ;
+
+element ::= section_item:s {: RESULT = s; :}
+          | table_item:t {: RESULT = t; :}
+          | question_item:q {: RESULT = q; :}
+          | HASH element:e {: RESULT = e; :}
+          | ERROR
+          {: hasSyntaxErrors = true; RESULT = new TextElement(new LayoutProps(null, null, null, null), "", null); :};
+
+/* Secciones */
+section_item ::= section_header
+               | LT SECTION EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA NUMBER_VAL:x COMMA NUMBER_VAL:y COMMA ORIENTATION_VAL:o GT
+                 content_block:cb
+                 OPEN_END_TAG SECTION GT
+                 {: RESULT = new SectionElement(new LayoutProps(Double.parseDouble(w), Double.parseDouble(h), Double.parseDouble(x), Double.parseDouble(y)), Orientacion.valueOf(o), cb, null); :}
+               | LT SECTION EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA NUMBER_VAL:x COMMA NUMBER_VAL:y COMMA ORIENTATION_VAL:o GT
+                 styles_block:sb
+                 content_block:cb
+                 OPEN_END_TAG SECTION GT
+                 {: RESULT = new SectionElement(new LayoutProps(Double.parseDouble(w), Double.parseDouble(h), Double.parseDouble(x), Double.parseDouble(y)), Orientacion.valueOf(o), cb, sb); :};
+
+section_header ::= TRIPLE_HASH
+                   LT SECTION EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA NUMBER_VAL:x COMMA NUMBER_VAL:y COMMA ORIENTATION_VAL:o GT
+                   OPEN_END_TAG SECTION GT
+                   TRIPLE_HASH
+                   {: RESULT = new SectionElement(new LayoutProps(Double.parseDouble(w), Double.parseDouble(h), Double.parseDouble(x), Double.parseDouble(y)), Orientacion.valueOf(o), new ArrayList<FormElement>(), null); :};
+
+content_block ::= LT CONTENT GT elements_list:el OPEN_END_TAG CONTENT GT
+                {: RESULT = el; :};
+
+/* Tablas */
+table_item ::= LT TABLE GT LT CONTENT GT line_list:ll OPEN_END_TAG CONTENT GT OPEN_END_TAG TABLE GT
+             {: RESULT = new TableElement(new LayoutProps(null, null, null, null), ll, null); :}
+             | LT TABLE GT styles_block:sb LT CONTENT GT line_list:ll OPEN_END_TAG CONTENT GT OPEN_END_TAG TABLE GT
+             {: RESULT = new TableElement(new LayoutProps(null, null, null, null), ll, sb); :};
+
+line_list ::= line_list:list line_item:li
+            {: list.add(li); RESULT = list; :}
+            | line_item:li
+            {: List<TableRow> l = new ArrayList<>(); l.add(li); RESULT = l; :};
+
+line_item ::= LT LINE GT table_elements_list:tel OPEN_END_TAG LINE GT
+            {: RESULT = new TableRow(tel); :};
+
+table_elements_list ::= table_elements_list:list table_element:te
+                      {: list.add(te); RESULT = list; :}
+                      | table_element:te
+                      {: List<TableCell> l = new ArrayList<>(); l.add(te); RESULT = l; :};
+
+table_element ::= LT ELEMENT GT element:e OPEN_END_TAG ELEMENT GT
+                {: RESULT = new TableCell(e); :};
+
+/* Preguntas y Texto */
+question_item ::= LT OPEN EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s CLOSE_SELF_TAG
+                {: RESULT = createOpenOrTextElement(w, h, s, null); :}
+                | LT OPEN EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s GT styles_block:sb OPEN_END_TAG OPEN GT
+                {: RESULT = createOpenOrTextElement(w, h, s, sb); :}
+                | LT DROP EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_source:os COMMA NUMBER_VAL:c CLOSE_SELF_TAG
+                {: RESULT = new DropQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), s, os, parseIntSafe(c), null); :}
+                | LT DROP EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_source:os COMMA NUMBER_VAL:c GT styles_block:sb OPEN_END_TAG DROP GT
+                {: RESULT = new DropQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), s, os, parseIntSafe(c), sb); :}
+                | LT SELECT EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_list:ol COMMA NUMBER_VAL:c CLOSE_SELF_TAG
+                {: RESULT = new SelectQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), ol, parseIntSafe(c), null); :}
+                | LT SELECT EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_list:ol COMMA NUMBER_VAL:c GT styles_block:sb OPEN_END_TAG SELECT GT
+                {: RESULT = new SelectQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), ol, parseIntSafe(c), sb); :}
+                | LT MULTIPLE EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_list:ol COMMA correct_val:cv CLOSE_SELF_TAG
+                {: RESULT = new MultipleQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), ol, cv, null); :}
+                | LT MULTIPLE EQUALS NUMBER_VAL:w COMMA NUMBER_VAL:h COMMA STRING_VAL:s COMMA options_list:ol COMMA correct_val:cv GT styles_block:sb OPEN_END_TAG MULTIPLE GT
+                {: RESULT = new MultipleQuestionElement(new LayoutProps(parseDimensionOrNull(w), parseDimensionOrNull(h), null, null), ol, cv, sb); :};
+
+options_source ::= options_list:ol
+                 {: RESULT = new OptionsSource.Static(ol); :}
+                 | WHO_IS_THAT_POKEMON LPAREN IDENTIFIER:selector COMMA NUMBER_VAL:inicio COMMA NUMBER_VAL:end RPAREN
+                 {: RESULT = new OptionsSource.PokemonRange(selector, parseIntSafe(inicio), parseIntSafe(end)); :};
+
+options_list ::= LBRACE string_list:sl RBRACE {: RESULT = sl; :}
+               | LBRACK string_list:sl RBRACK {: RESULT = sl; :};
+
+string_list ::= string_list:list COMMA STRING_VAL:s
+              {: list.add(s); RESULT = list; :}
+              | STRING_VAL:s
+              {: List<String> l = new ArrayList<>(); l.add(s); RESULT = l; :};
+
+correct_val ::= LBRACE number_list:nl RBRACE {: RESULT = nl; :}
+              | LBRACK number_list:nl RBRACK {: RESULT = nl; :}
+              | LBRACE RBRACE {: RESULT = new ArrayList<Integer>(); :}
+              | LBRACK RBRACK {: RESULT = new ArrayList<Integer>(); :};
+
+number_list ::= number_list:list COMMA NUMBER_VAL:n
+              {: list.add(parseIntSafe(n)); RESULT = list; :}
+              | NUMBER_VAL:n
+              {: List<Integer> l = new ArrayList<>(); l.add(parseIntSafe(n)); RESULT = l; :};

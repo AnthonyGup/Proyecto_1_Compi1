@@ -5,17 +5,16 @@ import com.cunoc.compiforms.form.model.PreguntaConComodines;
 import com.cunoc.compiforms.form.model.ResultadoValor;
 import com.cunoc.compiforms.form.model.questions.QuestionElement;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class QuestionSemanticSupport {
-    private final HashMap<String, Variable<?>> variables;
+    private final Map<String, Variable<?>> variables;
     private final SemanticValueSupport valueSupport;
     private final ParserSemanticSupport mainSupport;
 
     public QuestionSemanticSupport(
-        HashMap<String, Variable<?>> variables,
+        Map<String, Variable<?>> variables,
         SemanticValueSupport valueSupport,
         ParserSemanticSupport mainSupport
     ) {
@@ -25,8 +24,8 @@ public class QuestionSemanticSupport {
     }
 
     public Object crearPreguntaConComodines(QuestionElement pregunta, Object mapaAtributos) {
-        int comodines = contarComodines(mapaAtributos);
-        return new PreguntaConComodines(pregunta, comodines);
+        int wildcardCount = contarComodines(mapaAtributos);
+        return new PreguntaConComodines(pregunta, wildcardCount);
     }
 
     public void validarDraw(String nombreVariable, Object argumentos) {
@@ -36,41 +35,54 @@ public class QuestionSemanticSupport {
             return;
         }
 
-        List<Object> listaArgumentos = valueSupport.extraerListaObjetos(argumentos);
-        int cantidadRecibida = listaArgumentos.size();
-        
-        int cantidadEsperada = 0;
+        List<Object> argumentList = valueSupport.extraerListaObjetos(argumentos);
+        int receivedCount = argumentList.size();
+
+        int expectedCount = 0;
         if (variable.getValue() instanceof PreguntaConComodines) {
-            cantidadEsperada = ((PreguntaConComodines) variable.getValue()).cantidadComodines;
+            expectedCount = ((PreguntaConComodines) variable.getValue()).cantidadComodines;
         }
 
-        if (cantidadRecibida != cantidadEsperada) {
-            mainSupport.addSemanticError("draw() recibio " + cantidadRecibida + " valores, pero esperaba " + cantidadEsperada);
+        if (receivedCount != expectedCount) {
+            mainSupport.addSemanticError("draw() recibio " + receivedCount + " valores, pero esperaba " + expectedCount);
         }
     }
 
-    public void validarIndiceCorrecto(String n, Integer i, int t) { /* Implement if needed */ }
-    public void validarIndicesCorrectos(String n, List<Integer> i, int t) { /* Implement if needed */ }
-    public void validarCantidadOpcionesSelect(List<String> o) { /* Implement if needed */ }
+    public void validarIndiceCorrecto(String nombrePregunta, Integer indice, int totalOpciones) {
+        // Implement if needed
+    }
+
+    public void validarIndicesCorrectos(String nombrePregunta, List<Integer> indices, int totalOpciones) {
+        // Implement if needed
+    }
+
+    public void validarCantidadOpcionesSelect(List<String> opciones) {
+        // Implement if needed
+    }
 
     private int contarComodines(Object valor) {
-        if (valor == null) return 0;
+        if (valor == null) {
+            return 0;
+        }
+
         if (valor instanceof ResultadoValor resultadoValor) {
             return resultadoValor.cantidadComodines;
         }
+
         if (valor instanceof Map map) {
-            int suma = 0;
-            for (Object v : map.values()) {
-                suma += contarComodines(v);
+            int totalWildcards = 0;
+            for (Object value : map.values()) {
+                totalWildcards += contarComodines(value);
             }
-            return suma;
+            return totalWildcards;
         }
+
         if (valor instanceof List list) {
-            int suma = 0;
-            for (Object v : list) {
-                suma += contarComodines(v);
+            int totalWildcards = 0;
+            for (Object value : list) {
+                totalWildcards += contarComodines(value);
             }
-            return suma;
+            return totalWildcards;
         }
 
         return 0;

@@ -13,6 +13,7 @@ import com.cunoc.compiforms.tokens.*;
 %cup
 %line
 %column
+%char
 
 %{
 
@@ -151,13 +152,13 @@ EMOJI = ({EMOJI_SMILE_FACE}|{EMOJI_SMILE_WORD}|{EMOJI_SAD_FACE}|{EMOJI_SAD_WORD}
       "options"               { return symbol(sym.OPTIONS, TokenType.KEYWORD); }
       "correct"               { return symbol(sym.CORRECT, TokenType.KEYWORD); }
 
-      // Estilos
+      // Estilos con espacio obligatorio entre comillas
+      "\"color\""             { return symbol(sym.COLOR, TokenType.KEYWORD); }
+      "\"background color\""  { return symbol(sym.BACKGROUND_COLOR, TokenType.KEYWORD); }
+      "\"font family\""       { return symbol(sym.FONT_FAMILY, TokenType.KEYWORD); }
+      "\"text size\""         { return symbol(sym.TEXT_SIZE, TokenType.KEYWORD); }
+      "\"border\""            { return symbol(sym.BORDER, TokenType.KEYWORD); }
       "styles"                { return symbol(sym.STYLES, TokenType.KEYWORD); }
-      \"[ ]*color[ ]*\"             { return symbol(sym.COLOR, TokenType.KEYWORD); }
-      \"[ ]*background color[ ]*\"  { return symbol(sym.BACKGROUND_COLOR, TokenType.KEYWORD); }
-      \"[ ]*font family[ ]*\"       { return symbol(sym.FONT_FAMILY, TokenType.KEYWORD); }
-      \"[ ]*text size[ ]*\"         { return symbol(sym.TEXT_SIZE, TokenType.KEYWORD); }
-      \"[ ]*border[ ]*\"            { return symbol(sym.BORDER, TokenType.KEYWORD); }
 
 /*
 ============================================================
@@ -199,7 +200,7 @@ EMOJI = ({EMOJI_SMILE_FACE}|{EMOJI_SMILE_WORD}|{EMOJI_SAD_FACE}|{EMOJI_SAD_WORD}
 "||"                    { return symbol(sym.OR, TokenType.OTHER); }
 "~"                     { return symbol(sym.NOT, TokenType.OTHER); }
 
-"="                     { return symbol(sym.ASIGNACION, TokenType.OTHER); }
+"="                     { return symbol(sym.ASIGNACION, TokenType.OPERATOR); }
 
 /*
 ============================================================

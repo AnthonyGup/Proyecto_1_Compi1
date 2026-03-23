@@ -3,26 +3,25 @@ package com.cunoc.compiforms.semantic;
 import com.cunoc.compiforms.data.Variable;
 import com.cunoc.compiforms.data.VariableType;
 import com.cunoc.compiforms.form.model.ResultadoValor;
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Esta clase se encarga de todo lo relacionado con la memoria del script:
  * guardar variables, cambiar sus valores y buscarlas cuando se necesitan.
  */
 public class VariableSemanticSupport {
-    // La "memoria" donde guardamos las variables por su nombre
-    private final HashMap<String, Variable<?>> tablaDeVariables;
-    private final SemanticValueSupport ayudaValores;
-    private final ParserSemanticSupport soportePrincipal;
+    private final Map<String, Variable<?>> variableTable;
+    private final SemanticValueSupport valueSupport;
+    private final ParserSemanticSupport mainSupport;
 
     public VariableSemanticSupport(
-        HashMap<String, Variable<?>> variables,
-        SemanticValueSupport ayudaValores,
-        ParserSemanticSupport soportePrincipal
+        Map<String, Variable<?>> variables,
+        SemanticValueSupport valueSupport,
+        ParserSemanticSupport mainSupport
     ) {
-        this.tablaDeVariables = variables;
-        this.ayudaValores = ayudaValores;
-        this.soportePrincipal = soportePrincipal;
+        this.variableTable = variables;
+        this.valueSupport = valueSupport;
+        this.mainSupport = mainSupport;
     }
 
     /**
@@ -30,58 +29,75 @@ public class VariableSemanticSupport {
      * Si el nombre ya existe, genera un error.
      */
     public void declararVariable(String nombre, VariableType tipo, Object valorInicial) {
-        // Primero revisamos si el nombre ya está ocupado
-        if (tablaDeVariables.containsKey(nombre)) {
-            soportePrincipal.addSemanticError("Error: La variable '" + nombre + "' ya fue declarada anteriormente.");
+        if (variableTable.containsKey(nombre)) {
+            mainSupport.addSemanticError("Error: La variable '" + nombre + "' ya fue declarada anteriormente.");
             return;
         }
 
-        // Preparamos el valor para que coincida con el tipo (limpiar textos, convertir números)
-        Object valorLimpio = prepararValorSegunTipo(tipo, valorInicial);
-        
-        // Creamos la "cajita" (Variable) para guardar el valor
-        Variable<Object> nuevaVariable = new Variable<>(valorLimpio, tipo, nombre);
-        
-        // La guardamos en nuestra tabla de memoria
-        tablaDeVariables.put(nombre, nuevaVariable);
+        Object cleanValue = prepararValorSegunTipo(tipo, valorInicial);
+        Variable<Object> createdVariable = new Variable<>(cleanValue, tipo, nombre);
+        variableTable.put(nombre, createdVariable);
     }
 
     /**
      * Cambia el valor de una variable que ya existe.
      */
     public void asignarVariable(String nombre, VariableType tipoEsperado, Object valorNuevo) {
-        // Buscamos la variable en nuestra tabla
-        Variable<Object> variableEncontrada = (Variable<Object>) tablaDeVariables.get(nombre);
-        
-        // Si no existe, no podemos asignarle nada
-        if (variableEncontrada == null) {
-            soportePrincipal.addSemanticError("Error: No puedes darle un valor a '" + nombre + "' porque no existe.");
+        Variable<Object> foundVariable = (Variable<Object>) variableTable.get(nombre);
+
+        if (foundVariable == null) {
+            mainSupport.addSemanticError("Error: No puedes darle un valor a '" + nombre + "' porque no existe.");
             return;
         }
-        
-        // Preparamos el nuevo valor y lo guardamos en la cajita
-        Object valorLimpio = prepararValorSegunTipo(tipoEsperado, valorNuevo);
-        variableEncontrada.setValue(valorLimpio);
+
+        Object cleanValue = prepararValorSegunTipo(tipoEsperado, valorNuevo);
+        foundVariable.setValue(cleanValue);
+    }
+
+    /**
+     * Cambia el valor de una variable usando su tipo declarado real.
+     * Esto permite expresiones como: string a = b; o a = "x" + b;
+     */
+    public void asignarVariableSegunTipoDeclarado(String nombre, Object valorNuevo) {
+        Variable<Object> foundVariable = (Variable<Object>) variableTable.get(nombre);
+
+        if (foundVariable == null) {
+            mainSupport.addSemanticError("Error: No puedes darle un valor a '" + nombre + "' porque no existe.");
+            return;
+        }
+
+        VariableType declaredType = foundVariable.getType();
+        Object cleanValue = prepararValorSegunTipo(declaredType, valorNuevo);
+        foundVariable.setValue(cleanValue);
     }
 
     /**
      * Busca una variable y devuelve su valor empaquetado.
      */
     public Object resolverValorVariable(String nombre) {
-        Variable variable = tablaDeVariables.get(nombre);
-        
+        Variable variable = variableTable.get(nombre);
+
         if (variable == null) {
-            soportePrincipal.addSemanticError("Error: No se encontró la variable '" + nombre + "'.");
-            // Devolvemos un valor por defecto (0.0) para que el programa no se detenga
+            mainSupport.addSemanticError("Error: No se encontró la variable '" + nombre + "'.");
             return new ResultadoValor(0.0, 0, null);
         }
-        
-        // Devolvemos el valor que tenía guardado la variable
+
         return new ResultadoValor(variable.getValue(), 0, null);
     }
 
-    public void prepararVariableFor(String n) {
-        // Por ahora no necesitamos hacer nada especial aquí
+    public void prepararVariableFor(String nombreVariable) {
+        Variable<?> variable = variableTable.get(nombreVariable);
+
+        if (variable == null) {
+            variableTable.put(nombreVariable, new Variable<>(0.0, VariableType.NUMBER, nombreVariable));
+            return;
+        }
+
+        if (variable.getType() != VariableType.NUMBER) {
+            mainSupport.addSemanticError(
+                "Error: La variable '" + nombreVariable + "' usada en FOR debe ser de tipo number."
+            );
+        }
     }
 
     /**
@@ -91,16 +107,17 @@ public class VariableSemanticSupport {
      */
     private Object prepararValorSegunTipo(VariableType tipo, Object valorCrudo) {
         if (tipo == VariableType.NUMBER) {
-            Double numero = ayudaValores.convertirADouble(valorCrudo);
-            // Si no era un número válido, le ponemos 0.0 por defecto
-            return (numero == null) ? 0.0 : numero;
+            Double numberValue = valueSupport.convertirADouble(valorCrudo);
+            if (numberValue == null) {
+                return 0.0;
+            }
+            return numberValue;
         }
-        
+
         if (tipo == VariableType.STRING) {
-            return ayudaValores.convertirATexto(valorCrudo);
+            return valueSupport.convertirATexto(valorCrudo);
         }
-        
-        // Para otros tipos (como SPECIAL), devolvemos el valor tal cual
+
         return valorCrudo;
     }
 }

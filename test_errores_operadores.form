@@ -1,0 +1,30 @@
+$ Test de validación de operadores lógicos sin palabras reservadas
+
+$ Este archivo contiene errores INTENCIONALES para probar la validación
+
+number valorX = 5
+
+$ ERROR ESPERADO: No se puede mezclar && con ||
+IF (valorX > 0 && valorX < 10 || valorX == 5) {
+    TEXT [ content: "Este código causará error" ]
+}
+
+$ VÁLIDO: Solo AND
+IF (valorX > 0 && valorX < 10 && valorX == 5) {
+    TEXT [ content: "Este es válido" ]
+}
+
+$ VÁLIDO: Solo OR
+IF (valorX > 10 || valorX < 0 || valorX == 5) {
+    TEXT [ content: "Este también es válido" ]
+}
+
+$ VÁLIDO: Negación
+IF (~(valorX > 10)) {
+    TEXT [ content: "Negación funciona" ]
+}
+
+$ ERROR ESPERADO: Mezclar && y ||
+WHILE (valorX > 0 && valorX < 100 || valorX == 50) {
+    number valorX = valorX - 1
+}

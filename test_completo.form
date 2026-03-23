@@ -1,0 +1,166 @@
+$ Código de prueba completo del proyecto sin palabras reservadas
+
+number anchoBase = 100
+number altoBase = 50
+string tituloFormulario = "Formulario de Prueba @[:smile:]"
+
+$ Prueba de IF / ELSE IF / ELSE
+IF (5 > 3 && 2 < 10) {
+    SECTION [
+        width: 300,
+        height: 200,
+        pointX: 10,
+        pointY: 10,
+        orientation: VERTICAL,
+        elements: {
+            TEXT [
+                content: "Sección de Bienvenida @[:heart:]",
+                styles [
+                    "color": BLUE,
+                    "background color": WHITE,
+                    "font family": SANS_SERIF,
+                    "text size": 18
+                ]
+            ],
+            OPEN_QUESTION [
+                label: "¿Cuál es tu correo?",
+                width: 280,
+                height: 30,
+                styles [
+                    "color": BLACK
+                ]
+            ]
+        },
+        styles [
+            "color": BLACK,
+            "background color": WHITE,
+            "border": (2, LINE, #FF5733)
+        ]
+    ]
+}
+ELSE IF (5 < 3) {
+    TEXT [ content: "Este bloque no se ejecutará" ]
+}
+ELSE {
+    TEXT [ content: "Ejecutando else por defecto" ]
+}
+
+$ Prueba de WHILE
+number contadorWhile = 0
+WHILE (contadorWhile < 3 && contadorWhile >= 0) {
+    number contadorWhile = contadorWhile + 1
+}
+
+$ Prueba de DO WHILE
+DO {
+    number contadorWhile = contadorWhile - 1
+}
+WHILE (contadorWhile > 0 || contadorWhile == 0)
+
+$ Prueba de FOR (forma tradicional)
+FOR (i = 0 ; i < 2 ; i = i + 1) {
+    TEXT [ content: "Iteración" ]
+}
+
+$ Prueba de FOR (forma en rango)
+FOR (j in 1 .. 3) {
+    TEXT [ content: "Elemento del rango" ]
+}
+
+$ Prueba de TABLA CON SECCIONES ADENTRO
+TABLE [
+    width: 400,
+    height: 300,
+    pointX: 20,
+    pointY: 220,
+    elements: {
+        [
+            {
+                SECTION [
+                    width: 190,
+                    height: 140,
+                    pointX: 0,
+                    pointY: 0,
+                    orientation: HORIZONTAL,
+                    elements: {
+                        SELECT_QUESTION [
+                            options: {"Opción 1", "Opción 2", "Opción 3"},
+                            correct: 0,
+                            width: 180,
+                            height: 30
+                        ]
+                    },
+                    styles [
+                        "color": BLACK,
+                        "background color": WHITE
+                    ]
+                ]
+            },
+            {
+                SECTION [
+                    width: 190,
+                    height: 140,
+                    pointX: 200,
+                    pointY: 0,
+                    orientation: VERTICAL,
+                    elements: {
+                        TEXT [ content: "Segunda sección en tabla" ]
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                DROP_QUESTION [
+                    label: "Selecciona una opción @[:cat:]",
+                    options: {"Pokemon 1", "Pokemon 2", "Pokemon 3"},
+                    correct: 1,
+                    width: 190,
+                    height: 50
+                ]
+            },
+            {
+                MULTIPLE_QUESTION [
+                    options: {"Sí", "No", "Tal vez"},
+                    correct: {0, 2},
+                    width: 190,
+                    height: 50
+                ]
+            }
+        ]
+    },
+    styles [
+        "color": BLACK,
+        "background color": WHITE,
+        "border": (1, DOTTED, PURPLE)
+    ]
+]
+
+$ Prueba de expresiones aritméticas complejas
+number resultado = (5 + 3) * 2 - 10 / 2 ^ 2
+
+$ Prueba de negación lógica
+IF (~(5 > 10)) {
+    TEXT [ content: "La negación funciona @[:star:3:]" ]
+}
+
+$ Prueba de emojis variados en cadenas
+TEXT [
+    content: "Tengo @[:star:5:] estrellas @[:<3] corazón @[:))))] sonrisa @[:sad:] triste"
+]
+
+$ Sección final con todas las opciones de colores
+SECTION [
+    width: 300,
+    height: 100,
+    pointX: 430,
+    pointY: 10,
+    elements: {
+        TEXT [ content: "Colores RGB, HSL y HEX" ]
+    },
+    styles [
+        "color": (255, 0, 0),
+        "background color": <100, 100, 200>,
+        "border": (2, DOUBLE, #00FF00)
+    ]
+]

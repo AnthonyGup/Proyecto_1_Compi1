@@ -11,6 +11,10 @@ import com.cunoc.compiforms.tokens.*;
 import java_cup.runtime.Symbol;
 import java.util.*;
 import com.cunoc.compiforms.semantic.ParserSemanticSupport;
+import com.cunoc.compiforms.semantic.SemanticValueSupport;
+import com.cunoc.compiforms.semantic.VariableSemanticSupport;
+import com.cunoc.compiforms.semantic.ExpressionSemanticSupport;
+import com.cunoc.compiforms.semantic.QuestionSemanticSupport;
 
 parser code {:
 
@@ -97,12 +101,44 @@ public void unrecovered_syntax_error(Symbol cur_token) {
 
 action code {:
   private ParserSemanticSupport semanticSupport;
+  private SemanticValueSupport valueSupport;
+  private VariableSemanticSupport variableSupport;
+  private ExpressionSemanticSupport expressionSupport;
+  private QuestionSemanticSupport questionSupport;
+
+  private void initSemanticSupports() {
+    if (semanticSupport != null) return;
+
+    semanticSupport = new ParserSemanticSupport(parser);
+    valueSupport = new SemanticValueSupport(semanticSupport);
+    variableSupport = new VariableSemanticSupport(semanticSupport.getVariables(), valueSupport, semanticSupport);
+    expressionSupport = new ExpressionSemanticSupport(valueSupport, semanticSupport);
+    questionSupport = new QuestionSemanticSupport(semanticSupport.getVariables(), valueSupport, semanticSupport);
+  }
 
   private ParserSemanticSupport semanticSupport() {
-    if (semanticSupport == null) {
-      semanticSupport = new ParserSemanticSupport(parser);
-    }
+    initSemanticSupports();
     return semanticSupport;
+  }
+
+  private SemanticValueSupport valueSupport() {
+    initSemanticSupports();
+    return valueSupport;
+  }
+
+  private VariableSemanticSupport variableSupport() {
+    initSemanticSupports();
+    return variableSupport;
+  }
+
+  private ExpressionSemanticSupport expressionSupport() {
+    initSemanticSupports();
+    return expressionSupport;
+  }
+
+  private QuestionSemanticSupport questionSupport() {
+    initSemanticSupports();
+    return questionSupport;
   }
 
   public Map<String, Variable<?>> getVariables() { return semanticSupport().getVariables(); }
@@ -114,44 +150,45 @@ action code {:
   private FormDocument registrarDocumento(FormDocument documento) { semanticSupport().setParsedDocument(documento); return documento; }
 
   // Delegación a través del "experto en Valores"
-  private HashMap<String, Object> crearAtributo(String n, Object v) { return semanticSupport().getValores().crearAtributo(n, v); }
-  private HashMap<String, Object> combinarAtributos(Object i, Object d) { return semanticSupport().getValores().combinarAtributos(i, d); }
-  private Double convertirADouble(Object v) { return semanticSupport().getValores().convertirADouble(v); }
-  private Integer convertirAEntero(Object v) { return semanticSupport().getValores().convertirAEntero(v); }
-  private String convertirATexto(Object v) { return semanticSupport().getValores().convertirATexto(v); }
-  private String normalizarLiteralCadena(Object v) { return semanticSupport().getValores().normalizarLiteralCadena(v); }
-  private Orientacion convertirAOrientacion(Object v) { return semanticSupport().getValores().convertirAOrientacion(v); }
-  private FontFamily convertirAFuente(Object v) { return semanticSupport().getValores().convertirAFuente(v); }
-  private BorderType convertirATipoBorde(Object v) { return semanticSupport().getValores().convertirATipoBorde(v); }
-  private ColorValue crearColorNombrado(Object v) { return semanticSupport().getValores().crearColorNombrado(v); }
-  private ColorValue crearColorDesdeTexto(Object v) { return semanticSupport().getValores().crearColorDesdeTexto(v); }
-  private BorderStyle crearEstiloBorde(Object s, Object t, Object c) { return semanticSupport().getValores().crearEstiloBorde(s, t, c); }
-  private StyleSet construirEstilos(Object v) { return semanticSupport().getValores().construirEstilos(v); }
-  private ArrayList<FormElement> extraerElementosFormulario(Object v) { return semanticSupport().getValores().extraerElementosFormulario(v); }
-  private ArrayList<TableRow> extraerFilasTabla(Object v) { return semanticSupport().getValores().extraerFilasTabla(v); }
-  private ArrayList<String> extraerListaTextos(Object v) { return semanticSupport().getValores().extraerListaTextos(v); }
-  private ArrayList<Integer> extraerListaEnteros(Object v) { return semanticSupport().getValores().extraerListaEnteros(v); }
-  private ArrayList<Object> extraerListaObjetos(Object v) { return semanticSupport().getValores().extraerListaObjetos(v); }
-  private void validarAtributosObligatorios(Map<String, Object> m, String n, String[] r) { semanticSupport().getValores().validarAtributosObligatorios(m, n, r); }
+  private HashMap<String, Object> crearAtributo(String n, Object v) { return valueSupport().crearAtributo(n, v); }
+  private HashMap<String, Object> combinarAtributos(Object i, Object d) { return valueSupport().combinarAtributos(i, d); }
+  private Double convertirADouble(Object v) { return valueSupport().convertirADouble(v); }
+  private Integer convertirAEntero(Object v) { return valueSupport().convertirAEntero(v); }
+  private String convertirATexto(Object v) { return valueSupport().convertirATexto(v); }
+  private String normalizarLiteralCadena(Object v) { return valueSupport().normalizarLiteralCadena(v); }
+  private Orientacion convertirAOrientacion(Object v) { return valueSupport().convertirAOrientacion(v); }
+  private FontFamily convertirAFuente(Object v) { return valueSupport().convertirAFuente(v); }
+  private BorderType convertirATipoBorde(Object v) { return valueSupport().convertirATipoBorde(v); }
+  private ColorValue crearColorNombrado(Object v) { return valueSupport().crearColorNombrado(v); }
+  private ColorValue crearColorDesdeTexto(Object v) { return valueSupport().crearColorDesdeTexto(v); }
+  private BorderStyle crearEstiloBorde(Object s, Object t, Object c) { return valueSupport().crearEstiloBorde(s, t, c); }
+  private StyleSet construirEstilos(Object v) { return valueSupport().construirEstilos(v); }
+  private ArrayList<FormElement> extraerElementosFormulario(Object v) { return valueSupport().extraerElementosFormulario(v); }
+  private ArrayList<TableRow> extraerFilasTabla(Object v) { return valueSupport().extraerFilasTabla(v); }
+  private ArrayList<String> extraerListaTextos(Object v) { return valueSupport().extraerListaTextos(v); }
+  private ArrayList<Integer> extraerListaEnteros(Object v) { return valueSupport().extraerListaEnteros(v); }
+  private ArrayList<Object> extraerListaObjetos(Object v) { return valueSupport().extraerListaObjetos(v); }
+  private void validarAtributosObligatorios(Map<String, Object> m, String n, String[] r) { valueSupport().validarAtributosObligatorios(m, n, r); }
 
   // Delegación a través del "experto en Variables"
-  private void declararVariable(String n, VariableType t, Object v) { semanticSupport().getVariablesSoporte().declararVariable(n, t, v); }
-  private void asignarVariable(String n, VariableType t, Object v) { semanticSupport().getVariablesSoporte().asignarVariable(n, t, v); }
-  private void prepararVariableFor(String n) { semanticSupport().getVariablesSoporte().prepararVariableFor(n); }
-  private Object resolverValorVariable(String n) { return semanticSupport().getVariablesSoporte().resolverValorVariable(n); }
+  private void declararVariable(String n, VariableType t, Object v) { variableSupport().declararVariable(n, t, v); }
+  private void asignarVariable(String n, VariableType t, Object v) { variableSupport().asignarVariable(n, t, v); }
+  private void asignarVariableSegunTipoDeclarado(String n, Object v) { variableSupport().asignarVariableSegunTipoDeclarado(n, v); }
+  private void prepararVariableFor(String n) { variableSupport().prepararVariableFor(n); }
+  private Object resolverValorVariable(String n) { return variableSupport().resolverValorVariable(n); }
 
   // Delegación a través del "experto en Expresiones"
-  private Object evaluarOperacionAritmetica(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarOperacionAritmetica(i, d, o); }
-  private Object evaluarComparacion(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarComparacion(i, d, o); }
-  private Object evaluarOperacionLogica(Object i, Object d, String o) { return semanticSupport().getExpresiones().evaluarOperacionLogica(i, d, o); }
-  private Object negarOperacionLogica(Object v) { return semanticSupport().getExpresiones().negarOperacionLogica(v); }
+  private Object evaluarOperacionAritmetica(Object i, Object d, String o) { return expressionSupport().evaluarOperacionAritmetica(i, d, o); }
+  private Object evaluarComparacion(Object i, Object d, String o) { return expressionSupport().evaluarComparacion(i, d, o); }
+  private Object evaluarOperacionLogica(Object i, Object d, String o) { return expressionSupport().evaluarOperacionLogica(i, d, o); }
+  private Object negarOperacionLogica(Object v) { return expressionSupport().negarOperacionLogica(v); }
 
   // Delegación a través del "experto en Preguntas"
-  private Object crearPreguntaConComodines(QuestionElement q, Object m) { return semanticSupport().getPreguntas().crearPreguntaConComodines(q, m); }
-  private void validarDraw(String n, Object a) { semanticSupport().getPreguntas().validarDraw(n, a); }
-  private void validarIndiceCorrecto(String n, Integer i, int t) { semanticSupport().getPreguntas().validarIndiceCorrecto(n, i, t); }
-  private void validarIndicesCorrectos(String n, List<Integer> i, int t) { semanticSupport().getPreguntas().validarIndicesCorrectos(n, i, t); }
-  private void validarCantidadOpcionesSelect(List<String> o) { semanticSupport().getPreguntas().validarCantidadOpcionesSelect(o); }
+  private Object crearPreguntaConComodines(QuestionElement q, Object m) { return questionSupport().crearPreguntaConComodines(q, m); }
+  private void validarDraw(String n, Object a) { questionSupport().validarDraw(n, a); }
+  private void validarIndiceCorrecto(String n, Integer i, int t) { questionSupport().validarIndiceCorrecto(n, i, t); }
+  private void validarIndicesCorrectos(String n, List<Integer> i, int t) { questionSupport().validarIndicesCorrectos(n, i, t); }
+  private void validarCantidadOpcionesSelect(List<String> o) { questionSupport().validarCantidadOpcionesSelect(o); }
 
   // Utilidades generales del Soporte
   private Object crearResultadoValor(Object v) { return semanticSupport().crearResultadoValor(v); }
@@ -364,13 +401,7 @@ declarar_variable ::=
 
 asignacion ::= ID:id ASIGNACION expresion_aritmetica:valorAsignado
 {:
-  asignarVariable(id.toString(), VariableType.NUMBER, valorAsignado);
-:}
-;
-
-asignacion ::= ID:id ASIGNACION cadena_con_emojis:valorAsignado
-{:
-  asignarVariable(id.toString(), VariableType.STRING, valorAsignado);
+  asignarVariableSegunTipoDeclarado(id.toString(), valorAsignado);
 :}
 ;
 
@@ -631,10 +662,10 @@ atributo_drop_pregunta ::=
       {: RESULT = crearAtributo("label", v); :}
     | OPTIONS DOS_PUNTOS LLAVE_IZQ lista_opciones_min2:v LLAVE_DER
       {: RESULT = crearAtributo("optionsSource", new OptionsSource.Static(extraerListaTextos(v))); :}
-    | OPTIONS DOS_PUNTOS WHO_IS_THAT_POKEMON PAREN_IZQ argumento_pokemon:selector COMA ENTERO:start COMA ENTERO:end PAREN_DER
+    | OPTIONS DOS_PUNTOS WHO_IS_THAT_POKEMON PAREN_IZQ argumento_pokemon:selector COMA ENTERO:inicio COMA ENTERO:end PAREN_DER
       {:
         String selectorRango = convertirATexto(selector);
-        int inicioRango = convertirAEntero(start) == null ? 0 : convertirAEntero(start);
+        int inicioRango = convertirAEntero(inicio) == null ? 0 : convertirAEntero(inicio);
         int finRango = convertirAEntero(end) == null ? 0 : convertirAEntero(end);
         RESULT = crearAtributo("optionsSource", new OptionsSource.PokemonRange(selectorRango, inicioRango, finRango));
       :}
@@ -954,6 +985,7 @@ VALORES
 valor ::=
       ENTERO:numeroEntero {: RESULT = crearResultadoValor(convertirADouble(numeroEntero)); :}
     | DECIMAL:numeroDecimal {: RESULT = crearResultadoValor(convertirADouble(numeroDecimal)); :}
+  | CADENA:cadenaTexto {: RESULT = crearResultadoValor(normalizarLiteralCadena(cadenaTexto)); :}
     | ID:id {: RESULT = resolverValorVariable(id.toString()); :}
     | WILDCARD {: RESULT = crearResultadoConComodin(); :}
 ;
@@ -965,8 +997,8 @@ CADENA CON EMOJIS
 
 cadena_con_emojis ::= CADENA:value
                     {: RESULT = normalizarLiteralCadena(value); :}
-                    | cadena_con_emojis:base EMOJI:emoji
-                    {: RESULT = convertirATexto(base) + convertirATexto(emoji); :}
-                    | EMOJI:emoji
-                    {: RESULT = convertirATexto(emoji); :}
+                    | ID:id
+                    {: RESULT = convertirATexto(resolverValorVariable(id.toString())); :}
+                    | cadena_con_emojis:base MAS expresion_aritmetica:valor
+                    {: RESULT = convertirATexto(base) + convertirATexto(valor); :}
 ;

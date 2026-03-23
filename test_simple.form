@@ -1,0 +1,66 @@
+$ Test simple y válido sin palabras reservadas
+
+string encabezado = "Mi Formulario @[:star:4:]"
+number anchoFormulario = 300
+number altoFormulario = 250
+
+SECTION [
+    width: anchoFormulario,
+    height: altoFormulario,
+    pointX: 10,
+    pointY: 10,
+    elements: {
+        TEXT [
+            content: encabezado,
+            styles [
+                "color": BLUE,
+                "text size": 20
+            ]
+        ],
+        
+        OPEN_QUESTION [
+            label: "¿Cuál es tu nombre?",
+            width: 280,
+            height: 40,
+            styles [
+                "color": BLACK
+            ]
+        ],
+        
+        SELECT_QUESTION [
+            options: {"Masculino", "Femenino", "Otro"},
+            correct: 0,
+            width: 280,
+            height: 40
+        ],
+        
+        MULTIPLE_QUESTION [
+            options: {"Sí", "No"},
+            correct: {0},
+            width: 280,
+            height: 40
+        ],
+        
+        DROP_QUESTION [
+            label: "Selecciona tu edad",
+            options: {"18-25", "26-35", "36-45", "46+"},
+            correct: 1,
+            width: 280,
+            height: 40
+        ]
+    },
+    styles [
+        "color": BLACK,
+        "background color": WHITE,
+        "border": (2, LINE, BLUE)
+    ]
+]
+
+$ Prueba de variables
+FOR (i in 1 .. 3) {
+    number contador = i * 2
+}
+
+IF (5 > 3) {
+    TEXT [ content: "Condición cumplida" ]
+}

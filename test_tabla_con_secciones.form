@@ -1,0 +1,121 @@
+$ Test: Tabla con secciones dentro sin palabras reservadas
+
+SECTION [
+    width: 500,
+    height: 350,
+    pointX: 10,
+    pointY: 10,
+    orientation: VERTICAL,
+    elements: {
+        TEXT [ content: "Tabla con Secciones @[:smile:]" ],
+        
+        TABLE [
+            width: 480,
+            height: 300,
+            pointX: 0,
+            pointY: 50,
+            elements: {
+                [
+                    $ Primera fila - Primera celda con SECTION
+                    {
+                        SECTION [
+                            width: 230,
+                            height: 140,
+                            pointX: 0,
+                            pointY: 0,
+                            orientation: VERTICAL,
+                            elements: {
+                                TEXT [ content: "Sección 1 en Tabla" ],
+                                OPEN_QUESTION [
+                                    label: "Pregunta en sección 1",
+                                    width: 220,
+                                    height: 50
+                                ]
+                            },
+                            styles [
+                                "color": BLACK,
+                                "background color": WHITE,
+                                "border": (1, LINE, BLUE)
+                            ]
+                        ]
+                    },
+                    $ Primera fila - Segunda celda con SECTION
+                    {
+                        SECTION [
+                            width: 230,
+                            height: 140,
+                            pointX: 240,
+                            pointY: 0,
+                            orientation: VERTICAL,
+                            elements: {
+                                TEXT [ content: "Sección 2 en Tabla" ],
+                                SELECT_QUESTION [
+                                    options: {"Opción A", "Opción B"},
+                                    correct: 0,
+                                    width: 220,
+                                    height: 50
+                                ]
+                            },
+                            styles [
+                                "color": BLACK,
+                                "background color": WHITE,
+                                "border": (1, LINE, GREEN)
+                            ]
+                        ]
+                    }
+                ],
+                [
+                    $ Segunda fila - Primera celda con SECTION
+                    {
+                        SECTION [
+                            width: 230,
+                            height: 140,
+                            pointX: 0,
+                            pointY: 150,
+                            orientation: VERTICAL,
+                            elements: {
+                                TEXT [ content: "Sección 3 - Preguntas múltiples" ],
+                                MULTIPLE_QUESTION [
+                                    options: {"Sí", "No"},
+                                    correct: {0},
+                                    width: 220,
+                                    height: 50
+                                ]
+                            }
+                        ]
+                    },
+                    $ Segunda fila - Segunda celda con SECTION
+                    {
+                        SECTION [
+                            width: 230,
+                            height: 140,
+                            pointX: 240,
+                            pointY: 150,
+                            orientation: VERTICAL,
+                            elements: {
+                                TEXT [ content: "Sección 4 - Desplegable" ],
+                                DROP_QUESTION [
+                                    label: "Elige uno",
+                                    options: {"Opción 1", "Opción 2", "Opción 3"},
+                                    correct: -1,
+                                    width: 220,
+                                    height: 50
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            styles [
+                "color": BLACK,
+                "background color": WHITE,
+                "border": (2, DOUBLE, PURPLE)
+            ]
+        ]
+    },
+    styles [
+        "color": WHITE,
+        "background color": SKY,
+        "border": (3, LINE, PURPLE)
+    ]
+]
