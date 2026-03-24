@@ -22,12 +22,8 @@ import java.util.Map;
  * el Parser lee el código del usuario.
  */
 public class ParserSemanticSupport {
-    private final Parser parser;
-    
-    // Aquí guardamos las variables que el usuario declara en su script
+    private final Parser PARSER;
     private final HashMap<String, Variable<?>> variableTable = new HashMap<>();
-    
-    // Listas para recolectar problemas encontrados durante el análisis
     private final ArrayList<String> semanticErrors = new ArrayList<>();
     private final ArrayList<String> semanticWarnings = new ArrayList<>();
     
@@ -36,8 +32,8 @@ public class ParserSemanticSupport {
     // Aquí se va armando la estructura final del formulario
     private FormDocument parsedDocument = new FormDocument(new ArrayList<>());
 
-    public ParserSemanticSupport(Parser parser) {
-        this.parser = parser;
+    public ParserSemanticSupport(Parser PARSER) {
+        this.PARSER = PARSER;
         this.validadorOperadoresLogicos = new LogicalOperatorValidator();
     }
 
@@ -75,7 +71,7 @@ public class ParserSemanticSupport {
      * Construye el resultado final combinando todito
      */
     public ParseResult getParseResult() {
-        Lexer parserLexer = parser.getLexer();
+        Lexer parserLexer = PARSER.getLexer();
         
         List<TokenInfo> tokenList = new ArrayList<>();
         List<ErrorInfo> lexicalErrorList = new ArrayList<>();
@@ -90,7 +86,7 @@ public class ParserSemanticSupport {
             variableTable,
             tokenList,
             lexicalErrorList,
-            parser.getSyntaxErrors(),
+            PARSER.getSyntaxErrors(),
             semanticErrors,
             semanticWarnings
         );
@@ -106,7 +102,7 @@ public class ParserSemanticSupport {
     /**
      * Crea un objeto que representa un comodín '?' usado en una expresión.
      */
-    public Object crearResultadoConComodin() { 
+    public Object crearResultadoConComodin() {
         return new ResultadoValor(null, 1, null);
     }
 

@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Ayuda a convertir y validar los valores que vienen del lenguaje.
@@ -24,7 +22,6 @@ import java.util.regex.Pattern;
  */
 public class SemanticValueSupport {
     private final ParserSemanticSupport mainSupport;
-    private static final Pattern STAR_COUNT_PATTERN = Pattern.compile("@\\[:star(?:-|:)(\\d+|number):\\]");
 
     public SemanticValueSupport(ParserSemanticSupport mainSupport) {
         this.mainSupport = mainSupport;
@@ -108,29 +105,75 @@ public class SemanticValueSupport {
             .replace("@[:^:]", "\uD83D\uDE3A")
             .replace("@[:star:]", "\u2B50");
 
-        Matcher matcher = STAR_COUNT_PATTERN.matcher(resultado);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            String countToken = matcher.group(1);
-            int count;
-            if ("number".equalsIgnoreCase(countToken)) {
-                count = 1;
+        return reemplazarSecuenciasEstrella(resultado);
+    }
+
+    private String reemplazarSecuenciasEstrella(String texto) {
+        StringBuilder salida = new StringBuilder();
+        int cursor = 0;
+
+        while (cursor < texto.length()) {
+            int inicioToken = texto.indexOf("@[:star", cursor);
+            if (inicioToken < 0) {
+                salida.append(texto, cursor, texto.length());
+                break;
+            }
+
+            salida.append(texto, cursor, inicioToken);
+
+            int finToken = texto.indexOf(":]", inicioToken);
+            if (finToken < 0) {
+                salida.append(texto.substring(inicioToken));
+                break;
+            }
+
+            int inicioCantidad;
+            if (texto.startsWith("@[:star-", inicioToken)) {
+                inicioCantidad = inicioToken + "@[:star-".length();
+            } else if (texto.startsWith("@[:star:", inicioToken)) {
+                inicioCantidad = inicioToken + "@[:star:".length();
             } else {
-                count = Integer.parseInt(countToken);
+                salida.append(texto, inicioToken, finToken + 2);
+                cursor = finToken + 2;
+                continue;
             }
 
-            if (count < 0) {
-                count = 0;
+            String tokenCantidad = texto.substring(inicioCantidad, finToken);
+            Integer cantidad = parsearCantidadEstrellas(tokenCantidad);
+            if (cantidad == null) {
+                salida.append(texto, inicioToken, finToken + 2);
+            } else {
+                salida.append("\u2B50".repeat(cantidad));
             }
-            if (count > 30) {
-                count = 30;
-            }
-
-            String estrellas = "\u2B50".repeat(count);
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(estrellas));
+            cursor = finToken + 2;
         }
-        matcher.appendTail(sb);
-        return sb.toString();
+
+        return salida.toString();
+    }
+
+    private Integer parsearCantidadEstrellas(String tokenCantidad) {
+        if (tokenCantidad == null || tokenCantidad.isEmpty()) {
+            return null;
+        }
+
+        if ("number".equalsIgnoreCase(tokenCantidad)) {
+            return 1;
+        }
+
+        for (int i = 0; i < tokenCantidad.length(); i++) {
+            if (!Character.isDigit(tokenCantidad.charAt(i))) {
+                return null;
+            }
+        }
+
+        int cantidad = Integer.parseInt(tokenCantidad);
+        if (cantidad < 0) {
+            return 0;
+        }
+        if (cantidad > 30) {
+            return 30;
+        }
+        return cantidad;
     }
 
     // --- MÉTODOS PARA EXTRAER LISTAS ---

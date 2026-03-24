@@ -10,9 +10,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class PkmSerializer {
-    companion object {
-        private const val PKM_TEXT_PREFIX = "__PKM_TEXT__::"
-    }
+    private val PKM_TEXT_PREFIX = "__PKM_TEXT__::"
 
     private fun hasRenderableBorder(border: BorderStyle?): Boolean {
         return border?.size != null

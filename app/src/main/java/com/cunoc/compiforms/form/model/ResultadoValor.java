@@ -1,6 +1,9 @@
 package com.cunoc.compiforms.form.model;
 
-public class ResultadoValor {
+public class
+
+
+ResultadoValor {
     public Object valor;
     public int cantidadComodines;
     public String operadorLogico;
