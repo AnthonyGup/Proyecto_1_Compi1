@@ -517,8 +517,8 @@ fun FormStudioApp() {
                                 Column(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
                                     Text("Errores:", color = Color.Red, fontWeight = FontWeight.Bold)
                                     parseResult.lexicalErrors.forEach { ErrorItem("Léxico", it.description, it.line, it.column) }
-                                    parseResult.syntaxErrors.forEach { Text("- Sintáctico: ${'$'}it", color = Color.Red, fontSize = 12.sp) }
-                                    parseResult.semanticErrors.forEach { Text("- Semántico: ${'$'}it", color = Color(0xFFD32F2F), fontSize = 12.sp) }
+                                    parseResult.syntaxErrors.forEach { Text("- Sintáctico: $it", color = Color.Red, fontSize = 12.sp) }
+                                    parseResult.semanticErrors.forEach { Text("- Semántico: $it", color = Color(0xFFD32F2F), fontSize = 12.sp) }
                                 }
                             }
                         }
@@ -540,7 +540,7 @@ fun FormStudioApp() {
 
 @Composable
 fun ErrorItem(tipo: String, desc: String, linea: Int, columna: Int) {
-    Text("[${'$'}tipo] ${'$'}linea:${'$'}columna - ${'$'}desc", color = Color.Red, fontSize = 12.sp)
+    Text("[$tipo] $linea:$columna - $desc", color = Color.Red, fontSize = 12.sp)
 }
 
 @Composable
@@ -553,16 +553,264 @@ private fun FormRenderer(document: FormDocument) {
 }
 
 private val DEFAULT_TEMPLATE = """
-SECTION [
-    width: 350,
-    height: 300,    
-    pointX: 0,
-    pointY: 0,
+$ Programa completo con variables y formulario
+number edad_usuario = 25
+string nombre_usuario = "Carlos Lopez"
+number experiencia = 5
+
+IF (edad_usuario >= 18)
+{
+    SECTION [
+        width: 500,
+        height: 600,
+        pointX: 10,
+        pointY: 10,
+        orientation: VERTICAL,
+        elements: {
+            TEXT [
+                content: "Bienvenido " + nombre_usuario + " @[:smile:]"
+            ],
+            OPEN_QUESTION [
+                label: "Cual es tu correo?"
+            ],
+            DROP_QUESTION [
+                label: "Anos de experiencia",
+                options: {"0-2", "3-5", "6-10", "11+"}
+            ]
+        }
+    ]
+}
+
+$ Logica condicional
+number nivel_acceso = 3
+IF (nivel_acceso == 3 || nivel_acceso == 4)
+{
+    SECTION [
+        width: 360,
+        height: 120,
+        pointX: 520,
+        pointY: 10,
+        elements: {
+            TEXT [
+                content: "Tienes acceso premium @[:star:5:]"
+            ]
+        }
+    ]
+}
+
+$ Iteracion con generacion de secciones
+FOR (pregunta_num in 1 .. 3)
+{
+    SECTION [
+        width: 360,
+        height: 120,
+        pointX: 520,
+        pointY: 140,
+        elements: {
+            OPEN_QUESTION [
+                label: "Pregunta " + pregunta_num
+            ]
+        }
+    ]
+}
+
+$ Acumulador y resultado
+number puntuacion_total = 0
+number respuesta1 = 10
+number respuesta2 = 15
+number respuesta3 = 20
+puntuacion_total = respuesta1 + respuesta2 + respuesta3
+
+IF (puntuacion_total >= 40)
+{
+    SECTION [
+        width: 380,
+        height: 100,
+        pointX: 520,
+        pointY: 270,
+        elements: {
+            TEXT [
+                content: "Excelente desempeno"
+            ]
+        }
+    ]
+}
+ELSE
+{
+    IF (puntuacion_total >= 30)
+    {
+        SECTION [
+            width: 380,
+            height: 100,
+            pointX: 520,
+            pointY: 380,
+            elements: {
+                TEXT [
+                    content: "Buen desempeno"
+                ]
+            }
+        ]
+    }
+    ELSE
+    {
+        SECTION [
+            width: 380,
+            height: 100,
+            pointX: 520,
+            pointY: 490,
+            elements: {
+                TEXT [
+                    content: "Necesita mejorar"
+                ]
+            }
+        ]
+    }
+}
+
+$ Tabla dinamica valida
+string col1_name = "Producto"
+string col2_name = "Cantidad"
+TABLE [
+    width: 420,
+    height: 220,
+    pointX: 10,
+    pointY: 620,
     elements: {
-        DROP_QUESTION [
-            label: "Selecciona tu Pokémon inicial",
-            options: who_is_that_pokemon(number, 1, 3)
+        [
+            { TEXT [ content: col1_name ] },
+            { TEXT [ content: col2_name ] }
+        ],
+        [
+            { TEXT [ content: "Laptop" ] },
+            { TEXT [ content: "3" ] }
+        ],
+        [
+            { TEXT [ content: "Mouse" ] },
+            { TEXT [ content: "15" ] }
+        ]
+    },
+    styles [
+        "border": (1, LINE, BLUE)
+    ]
+]
+
+$ Seccion anidada compleja
+SECTION [
+    width: 600,
+    height: 500,
+    pointX: 10,
+    pointY: 860,
+    elements: {
+        TEXT [
+            content: "Sistema de Gestion"
+        ],
+        SECTION [
+            width: 550,
+            height: 180,
+            pointX: 0,
+            pointY: 0,
+            elements: {
+                TEXT [
+                    content: "Datos del usuario"
+                ],
+                OPEN_QUESTION [
+                    label: "Nombre"
+                ]
+            }
+        ],
+        SECTION [
+            width: 550,
+            height: 180,
+            pointX: 0,
+            pointY: 190,
+            elements: {
+                TEXT [
+                    content: "Preferencias"
+                ],
+                OPEN_QUESTION [
+                    label: "Cuentanos tus preferencias"
+                ]
+            }
         ]
     }
 ]
+
+$ Conteo pares y reporte
+number contador_iteracion = 0
+FOR (i in 1 .. 10)
+{
+    IF (i % 2 == 0)
+    {
+        contador_iteracion = contador_iteracion + 1
+    }
+}
+
+SECTION [
+    width: 360,
+    height: 120,
+    pointX: 620,
+    pointY: 620,
+    elements: {
+        TEXT [
+            content: "Numeros pares encontrados: " + contador_iteracion
+        ]
+    }
+]
+
+$ Encuesta completa
+string titulo_encuesta = "Encuesta de Satisfaccion"
+number preguntas_totales = 5
+SECTION [
+    width: 560,
+    height: 620,
+    pointX: 620,
+    pointY: 760,
+    orientation: VERTICAL,
+    elements: {
+        TEXT [
+            content: titulo_encuesta + " (Pregunta 1 de " + preguntas_totales + ")"
+        ],
+        OPEN_QUESTION [
+            label: "Cual es tu nombre?"
+        ],
+        DROP_QUESTION [
+            label: "Departamento",
+            options: {"Ventas", "Operaciones", "Finanzas", "RH"}
+        ],
+        SELECT_QUESTION [
+            options: {"Muy satisfecho", "Satisfecho", "Neutral", "Insatisfecho"}
+        ],
+        MULTIPLE_QUESTION [
+            options: {"Comunicacion", "Liderazgo", "Eficiencia"},
+            width: 500
+        ],
+        TEXT [
+            content: "Gracias por completar la encuesta @[:heart:]"
+        ]
+    },
+    styles [
+        "background color": WHITE,
+        "border": (2, DOUBLE, BLUE)
+    ]
+]
+
+$ Regla final condicional
+number score_usuario = 12
+IF (score_usuario >= 12)
+{
+    SECTION [
+        width: 420,
+        height: 160,
+        pointX: 620,
+        pointY: 1390,
+        elements: {
+            DROP_QUESTION [
+                label: "Deseas recibir mas informacion?",
+                options: {"Si", "No"}
+            ]
+        }
+    ]
+}
+
+
 """.trimIndent()

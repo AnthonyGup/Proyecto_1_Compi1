@@ -1,0 +1,142 @@
+$ Variables tipo number inicializadas con valores
+number edad = 25
+number altura = 1.75
+number contador = 0
+number saldo = -500
+number temperatura = -15.5
+
+$ Variables tipo number sin inicializar
+number variable_vacia
+number otro_numero
+
+$ Variables tipo string con varios valores
+string nombre = "Juan Pérez García"
+string titulo = "Formulario Principal"
+string descripcion = "Esta es una descripción larga del formulario"
+string mensaje = "Hola mundo"
+string vacio = ""
+
+$ Variables string con caracteres especiales
+string con_emojis = "Bienvenido @[:smile:]"
+string con_emoticones = "¿Cómo estás? @[:\)+]"
+string con_corazon = "Te amo @[:heart:]"
+string con_estrella = "Excelente @[:star:]"
+
+$ Reasignaciones de variables
+number x = 10
+x = 20
+x = 30
+x = -50
+
+$ Reasignaciones de strings
+string frase = "Primer texto"
+frase = "Segundo texto"
+frase = "Tercer texto"
+
+$ Asignación con operaciones aritméticas
+number suma = 5 + 3
+number resta = 100 - 25
+number multiplicacion = 7 * 8
+number division = 100 / 4
+number potencia = 2 + 8
+number modulo = 17 % 5
+
+$ Asignación con expresiones complejas
+number exp1 = 2 + 3 * 4
+number exp2 = 10 - 2 * 3
+number exp3 = 100 / 4 + 5
+number exp4 = 2 + 3 * 4
+number exp5 = 50 / 5 * 2 + 10 - 3
+
+$ Asignación con variables
+number a = 15
+number b = a + 10
+number c = a * 2
+number d = a - 5
+
+$ Concatenación de strings
+string apellido = "López"
+string nombre_completo = "Carlos " + apellido
+string saludo = "Hola " + nombre_completo + " bienvenido"
+
+$ Concatenación con números
+number id = 12345
+string codigo = "ID: " + id
+string mensaje_id = "Tu código es " + id + " - Válido"
+
+$ Variables referenciando otras variables
+number base = 50
+number doble = base * 2
+number triple = base * 3
+number suma_total = doble + triple
+
+$ Reasignación con cálculos
+number factor = 7
+number resultado = factor + factor + factor
+
+$ Números con decimales
+number pi = 3.14159
+number decimal = 2.71828
+number pequeno = 0.0001
+number grande = 999999999
+
+$ String con espacios
+string espacios = "   "
+string con_espacios = "  Texto con espacios  "
+
+$ Variables inicializadas en cero
+number cero = 0
+cero = 0 + 0
+cero = 0 * 1000
+
+$ Flujo secuencial de declaraciones
+number var1 = 10
+number var2 = 20
+number var3 = 30
+number var4 = var1 + var2 + var3
+
+$ Contador con incrementos
+number contador_secuencial = 0
+contador_secuencial = 1
+contador_secuencial = contador_secuencial + 1
+contador_secuencial = contador_secuencial + 1
+
+$ Cadena de concatenaciones
+string frase_acumulada = "Inicio"
+frase_acumulada = frase_acumulada + " intermedio"
+frase_acumulada = frase_acumulada + " final"
+
+$ Mezcla de tipos en cálculos
+number edad_usuario = 30
+string nombre_usuario = "Ana"
+number experiencia = 10
+string presentacion = nombre_usuario + " tiene " + edad_usuario + " años"
+presentacion = presentacion + " con " + experiencia + " años de experiencia"
+
+$ Números negativos en operaciones
+number negativo = -100
+number resultado_neg = negativo + 50
+number otro_neg = negativo * 2
+
+$ Variables usadas múltiples veces
+number valor_base = 100
+string msg1 = "Valor: " + valor_base
+string msg2 = "Doble: " + valor_base * 2
+number calc1 = valor_base / 2
+number calc2 = valor_base * 3
+
+$ Inicialización con cálculos complejos
+number result_complejo = 2 + 3 * 4 - 5 / 5 + 10
+number otro_complejo = 100 / 2 * 3 - 50 + 25
+
+$ Múltiples variables del mismo tipo
+string ciudad1 = "Guatemala"
+string ciudad2 = "Antigua"
+string ciudad3 = "Chichicastenango"
+string ciudad_actual = ciudad1 + ", " + ciudad2
+
+$ Variables para usar en cálculos posteriores
+number cantidad = 100
+number precio_unitario = 25
+number total = cantidad * precio_unitario
+string resultado_venta = "Total: " + total + " unidades vendidas"

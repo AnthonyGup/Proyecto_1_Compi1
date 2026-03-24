@@ -1,0 +1,390 @@
+$ Operaciones aritméticas básicas
+number suma = 10 + 5
+number resta = 100 - 25
+number mult = 5 * 3
+number div = 100 / 4
+number pot = 2 + 8
+number mod = 17 % 5
+number neg = -50
+
+$ Operaciones con precedencia
+number p1 = 2 + 3 * 4
+number p2 = 10 - 2 * 3
+number p3 = 100 / 4 + 5
+number p4 = 2 + 3 * 4
+number p5 = 10 + 5 * 2 - 3 / 3
+number p6 = 2 * 3 + 4 * 5
+number p7 = 100 / 2 / 5 + 10
+
+$ Operaciones complejas con múltiples operadores
+number c1 = 2 + 3 * 4 - 5 / 5 + 10
+number c2 = 100 / 2 * 3 - 50 + 25
+number c3 = 2 + 3 * 4 - 6 / 2
+number c4 = 50 / 5 * 2 + 10 - 3
+
+$ Comparación igualdad
+number x = 10
+number y = 10
+IF (x == y)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 0,
+        elements: {
+            TEXT [
+                content: "Son iguales"
+            ]
+        }
+    ]
+}
+
+$ Comparación desigualdad
+number a = 5
+number b = 10
+IF (a != b)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 90,
+        elements: {
+            TEXT [
+                content: "Valores diferentes"
+            ]
+        }
+    ]
+}
+
+$ Comparación mayor que
+number num1 = 20
+number num2 = 10
+IF (num1 > num2)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 180,
+        elements: {
+            TEXT [
+                content: "Primer número es mayor"
+            ]
+        }
+    ]
+}
+
+$ Comparación menor que
+number c = 5
+number d = 10
+IF (c < d)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 270,
+        elements: {
+            TEXT [
+                content: "Primer número es menor"
+            ]
+        }
+    ]
+}
+
+$ Comparación mayor o igual
+number m1 = 15
+number m2 = 15
+IF (m1 >= m2)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 360,
+        elements: {
+            TEXT [
+                content: "Mayor o igual"
+            ]
+        }
+    ]
+}
+
+$ Comparación menor o igual
+number mi1 = 10
+number mi2 = 15
+IF (mi1 <= mi2)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 450,
+        elements: {
+            TEXT [
+                content: "Menor o igual"
+            ]
+        }
+    ]
+}
+
+$ Operación lógica AND
+number v1 = 1
+number v2 = 1
+IF (v1 == 1 && v2 == 1)
+{
+    SECTION [
+        width: 360,
+        height: 80,
+        pointX: 0,
+        pointY: 540,
+        elements: {
+            TEXT [
+                content: "Ambas condiciones verdaderas"
+            ]
+        }
+    ]
+}
+
+$ Operación lógica OR
+number or1 = 1
+number or2 = 0
+IF (or1 == 1 || or2 == 1)
+{
+    SECTION [
+        width: 360,
+        height: 80,
+        pointX: 0,
+        pointY: 630,
+        elements: {
+            TEXT [
+                content: "Al menos una es verdadera"
+            ]
+        }
+    ]
+}
+
+$ Operación lógica NOT
+number bool_val = 1
+IF (bool_val != 0)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 720,
+        elements: {
+            TEXT [
+                content: "Condición cumplida"
+            ]
+        }
+    ]
+}
+
+$ Comparaciones AND múltiples
+number p1_val = 10
+number p2_val = 20
+number p3_val = 30
+IF (p1_val < p2_val && p2_val < p3_val && p1_val > 0)
+{
+    SECTION [
+        width: 400,
+        height: 80,
+        pointX: 0,
+        pointY: 810,
+        elements: {
+            TEXT [
+                content: "Todas las condiciones se cumplen"
+            ]
+        }
+    ]
+}
+
+$ Comparaciones OR múltiples
+number q1 = 5
+number q2 = 15
+number q3 = 25
+IF (q1 > 10 || q2 > 10 || q3 > 10)
+{
+    SECTION [
+        width: 400,
+        height: 80,
+        pointX: 0,
+        pointY: 900,
+        elements: {
+            TEXT [
+                content: "Al menos una condición se cumple"
+            ]
+        }
+    ]
+}
+
+$ Combinación de AND y OR
+number x1 = 10
+number y1 = 20
+number z1 = 30
+IF (x1 < y1 && y1 < z1 || x1 > 100)
+{
+    SECTION [
+        width: 390,
+        height: 80,
+        pointX: 0,
+        pointY: 990,
+        elements: {
+            TEXT [
+                content: "Condición combinada verdadera"
+            ]
+        }
+    ]
+}
+
+$ Negaciones complejas
+number valor = 50
+IF (valor >= 30 && valor <= 100)
+{
+    SECTION [
+        width: 340,
+        height: 80,
+        pointX: 0,
+        pointY: 1080,
+        elements: {
+            TEXT [
+                content: "Valor en rango válido"
+            ]
+        }
+    ]
+}
+
+$ Comparación con variables modificadas
+number inicio = 100
+number deduccion = 25
+number final = inicio - deduccion
+IF (final >= 50)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 1170,
+        elements: {
+            TEXT [
+                content: "Saldo suficiente"
+            ]
+        }
+    ]
+}
+
+$ Comparación con resultados de divisiones
+number dividendo = 100
+number divisor = 3
+number cociente = dividendo / divisor
+IF (cociente > 30)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 1260,
+        elements: {
+            TEXT [
+                content: "Cociente grande"
+            ]
+        }
+    ]
+}
+
+$ Validación de rango con AND
+number edad_validar = 25
+IF (edad_validar >= 18 && edad_validar <= 65)
+{
+    SECTION [
+        width: 360,
+        height: 80,
+        pointX: 0,
+        pointY: 1350,
+        elements: {
+            TEXT [
+                content: "Edad válida para trabajar"
+            ]
+        }
+    ]
+}
+
+$ Validación múltiple con operadores
+number valor_a = 15
+number valor_b = 25
+number valor_c = 35
+IF ((valor_a + valor_b) > valor_c && valor_a != valor_b)
+{
+    SECTION [
+        width: 380,
+        height: 80,
+        pointX: 0,
+        pointY: 1440,
+        elements: {
+            TEXT [
+                content: "Validación múltiple correcta"
+            ]
+        }
+    ]
+}
+
+$ Operaciones aritméticas en comparaciones
+number base_val = 50
+number porcentaje = 20
+number aumento = base_val + (base_val * porcentaje / 100)
+IF (aumento > base_val)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 1530,
+        elements: {
+            TEXT [
+                content: "Precio aumentado"
+            ]
+        }
+    ]
+}
+
+$ Encadenamiento de comparaciones
+number s1 = 5
+number s2 = 15
+number s3 = 25
+number s4 = 35
+IF (s1 < s2 && s2 < s3 && s3 < s4)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 1620,
+        elements: {
+            TEXT [
+                content: "Cadena correcta"
+            ]
+        }
+    ]
+}
+
+$ Operaciones mixtas
+number num_a = 100
+number num_b = 50
+number num_c = 25
+IF ((num_a - num_b) == num_c && num_a > 50)
+{
+    SECTION [
+        width: 340,
+        height: 80,
+        pointX: 0,
+        pointY: 1710,
+        elements: {
+            TEXT [
+                content: "Operación correcta"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,140 @@
+﻿$ SECTION basica
+SECTION [
+    width: 300,
+    height: 200,
+    pointX: 10,
+    pointY: 10,
+    orientation: VERTICAL
+]
+
+$ SECTION con estilos
+SECTION [
+    width: 350,
+    height: 220,
+    pointX: 10,
+    pointY: 220,
+    styles [
+        "color": BLUE,
+        "background color": SKY,
+        "border": (1, DOTTED, BLACK)
+    ]
+]
+
+$ SECTION con textos
+SECTION [
+    width: 420,
+    height: 260,
+    pointX: 10,
+    pointY: 450,
+    elements: {
+        TEXT [
+            content: "Encabezado del formulario",
+            styles [
+                "text size": 20,
+                "color": PURPLE
+            ]
+        ],
+        TEXT [
+            content: "Descripcion general",
+            styles [
+                "font family": SANS_SERIF
+            ]
+        ],
+        TEXT [
+            content: "Bienvenido @[:smile:]"
+        ]
+    }
+]
+
+$ TABLE con celdas validas
+TABLE [
+    width: 420,
+    height: 220,
+    pointX: 10,
+    pointY: 720,
+    elements: {
+        [
+            { TEXT [ content: "Producto" ] },
+            { TEXT [ content: "Cantidad" ] },
+            { TEXT [ content: "Precio" ] }
+        ],
+        [
+            { TEXT [ content: "Laptop" ] },
+            { TEXT [ content: "3" ] },
+            { TEXT [ content: "1500" ] }
+        ],
+        [
+            { TEXT [ content: "Mouse" ] },
+            { TEXT [ content: "15" ] },
+            { TEXT [ content: "25" ] }
+        ]
+    },
+    styles [
+        "border": (2, LINE, BLUE)
+    ]
+]
+
+$ SECTION con elementos mixtos
+SECTION [
+    width: 500,
+    height: 500,
+    pointX: 450,
+    pointY: 10,
+    orientation: VERTICAL,
+    elements: {
+        TEXT [
+            content: "Seccion mixta"
+        ],
+        OPEN_QUESTION [
+            label: "Ingresa tu nombre"
+        ],
+        DROP_QUESTION [
+            label: "Selecciona departamento",
+            options: {"Ventas", "RH", "TI"}
+        ],
+        SELECT_QUESTION [
+            options: {"Si", "No"}
+        ],
+        MULTIPLE_QUESTION [
+            options: {"A", "B", "C"},
+            correct: {0, 2}
+        ]
+    },
+    styles [
+        "background color": WHITE,
+        "border": (1, DOUBLE, GREEN)
+    ]
+]
+
+$ SECTION condicional
+number permitir = 1
+IF (permitir == 1)
+{
+    SECTION [
+        width: 320,
+        height: 120,
+        pointX: 450,
+        pointY: 530,
+        elements: {
+            TEXT [
+                content: "Seccion condicional activa"
+            ]
+        }
+    ]
+}
+
+$ SECTION en FOR
+FOR (i in 1 .. 2)
+{
+    SECTION [
+        width: 260,
+        height: 80,
+        pointX: 450,
+        pointY: 660,
+        elements: {
+            TEXT [
+                content: "Bloque generado " + i
+            ]
+        }
+    ]
+}

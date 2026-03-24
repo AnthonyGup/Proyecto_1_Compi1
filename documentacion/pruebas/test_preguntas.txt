@@ -1,0 +1,157 @@
+﻿$ Preguntas basicas en SECTION
+SECTION [
+    width: 480,
+    height: 420,
+    pointX: 10,
+    pointY: 10,
+    orientation: VERTICAL,
+    elements: {
+        OPEN_QUESTION [
+            label: "Cual es tu nombre?"
+        ],
+        DROP_QUESTION [
+            label: "Selecciona una opcion",
+            options: {"Opcion 1", "Opcion 2", "Opcion 3"}
+        ],
+        SELECT_QUESTION [
+            options: {"Si", "No"},
+            correct: 0
+        ],
+        MULTIPLE_QUESTION [
+            options: {"A", "B", "C", "D"},
+            correct: {0, 2}
+        ]
+    }
+]
+
+$ Preguntas con estilos
+SECTION [
+    width: 520,
+    height: 500,
+    pointX: 10,
+    pointY: 440,
+    orientation: VERTICAL,
+    elements: {
+        OPEN_QUESTION [
+            label: "Describe tu experiencia",
+            width: 450,
+            height: 150,
+            styles [
+                "border": (1, LINE, BLUE),
+                "text size": 14
+            ]
+        ],
+        DROP_QUESTION [
+            label: "Nivel",
+            options: {"Basico", "Intermedio", "Avanzado"},
+            correct: 1,
+            styles [
+                "color": RED
+            ]
+        ],
+        SELECT_QUESTION [
+            options: {"Excelente", "Bueno", "Regular"},
+            styles [
+                "background color": WHITE
+            ]
+        ],
+        MULTIPLE_QUESTION [
+            options: {"Java", "Python", "SQL"},
+            width: 420
+        ]
+    }
+]
+
+$ Preguntas con variables
+string encuesta = "Cual es tu opinion?"
+string opt1 = "Opcion A"
+string opt2 = "Opcion B"
+SECTION [
+    width: 500,
+    height: 260,
+    pointX: 540,
+    pointY: 10,
+    elements: {
+        OPEN_QUESTION [
+            label: encuesta
+        ],
+        DROP_QUESTION [
+            label: "Selecciona",
+            options: {opt1, opt2, "Opcion C"}
+        ]
+    }
+]
+
+$ Preguntas dentro de IF y FOR usando SECTION
+number mostrar_pregunta = 1
+IF (mostrar_pregunta == 1)
+{
+    SECTION [
+        width: 420,
+        height: 180,
+        pointX: 540,
+        pointY: 280,
+        elements: {
+            OPEN_QUESTION [
+                label: "Deseas continuar?"
+            ]
+        }
+    ]
+}
+
+FOR (i in 1 .. 2)
+{
+    SECTION [
+        width: 420,
+        height: 180,
+        pointX: 540,
+        pointY: 470,
+        elements: {
+            DROP_QUESTION [
+                label: "Pregunta iterada " + i,
+                options: {"A", "B"}
+            ]
+        }
+    ]
+}
+
+$ Preguntas con tabla y texto
+SECTION [
+    width: 560,
+    height: 480,
+    pointX: 10,
+    pointY: 960,
+    elements: {
+        TEXT [
+            content: "Cuestionario de satisfaccion"
+        ],
+        TABLE [
+            width: 520,
+            height: 120,
+            pointX: 0,
+            pointY: 0,
+            elements: {
+                [
+                    { TEXT [ content: "Item" ] },
+                    { TEXT [ content: "Valor" ] }
+                ],
+                [
+                    { TEXT [ content: "A" ] },
+                    { TEXT [ content: "10" ] }
+                ],
+                [
+                    { TEXT [ content: "B" ] },
+                    { TEXT [ content: "20" ] }
+                ]
+            }
+        ],
+        MULTIPLE_QUESTION [
+            options: {"Comunicacion", "Liderazgo", "Analisis"},
+            width: 500
+        ]
+    },
+    styles [
+        "background color": WHITE,
+        "border": (2, DOUBLE, BLUE)
+    ]
+]

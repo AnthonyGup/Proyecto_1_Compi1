@@ -1,0 +1,171 @@
+﻿$ IF simple
+number edad = 25
+IF (edad >= 18)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 0,
+        elements: {
+            TEXT [
+                content: "Mayor de edad"
+            ]
+        }
+    ]
+}
+
+$ IF ELSE simple
+number puntaje = 45
+IF (puntaje >= 60)
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 90,
+        elements: {
+            TEXT [
+                content: "Aprobado"
+            ]
+        }
+    ]
+}
+ELSE
+{
+    SECTION [
+        width: 320,
+        height: 80,
+        pointX: 0,
+        pointY: 180,
+        elements: {
+            TEXT [
+                content: "Reprobado"
+            ]
+        }
+    ]
+}
+
+$ IF con AND
+number temperatura = 30
+IF (temperatura > 25 && temperatura < 35)
+{
+    SECTION [
+        width: 350,
+        height: 80,
+        pointX: 0,
+        pointY: 270,
+        elements: {
+            TEXT [
+                content: "Temperatura normal"
+            ]
+        }
+    ]
+}
+
+$ IF anidado
+number num = 10
+IF (num > 0)
+{
+    IF (num > 5)
+    {
+        SECTION [
+            width: 360,
+            height: 80,
+            pointX: 0,
+            pointY: 360,
+            elements: {
+                TEXT [
+                    content: "Numero grande positivo"
+                ]
+            }
+        ]
+    }
+    ELSE
+    {
+        SECTION [
+            width: 360,
+            height: 80,
+            pointX: 0,
+            pointY: 450,
+            elements: {
+                TEXT [
+                    content: "Numero pequeno positivo"
+                ]
+            }
+        ]
+    }
+}
+
+$ WHILE contador
+number contador = 0
+WHILE (contador < 5)
+{
+    contador = contador + 1
+}
+
+$ WHILE acumulador
+number suma = 0
+number i = 1
+WHILE (i <= 10)
+{
+    suma = suma + i
+    i = i + 1
+}
+
+$ DO WHILE simple
+number contador_do = 0
+DO
+{
+    contador_do = contador_do + 1
+}
+WHILE (contador_do < 5)
+
+$ FOR simple
+FOR (k in 1 .. 3)
+{
+    SECTION [
+        width: 260,
+        height: 70,
+        pointX: 0,
+        pointY: 540,
+        elements: {
+            TEXT [
+                content: "Iteracion " + k
+            ]
+        }
+    ]
+}
+
+$ FOR con IF interno
+number suma_pares = 0
+FOR (n in 1 .. 20)
+{
+    IF ((n % 2) == 0)
+    {
+        suma_pares = suma_pares + n
+    }
+}
+
+$ Reporte final
+SECTION [
+    width: 420,
+    height: 120,
+    pointX: 0,
+    pointY: 620,
+    elements: {
+        TEXT [
+            content: "Suma pares: " + suma_pares
+        ],
+        TEXT [
+            content: "Suma 1..10: " + suma
+        ],
+        TEXT [
+            content: "Contador final: " + contador
+        ]
+    },
+    styles [
+        "border": (1, LINE, BLUE),
+        "background color": WHITE
+    ]
+]
